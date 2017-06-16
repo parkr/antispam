@@ -1,0 +1,51 @@
+{
+	"ImportPath": "github.com/parkr/antispam",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Packages": [
+		"github.com/parkr/antispam"
+	],
+	"Deps": [
+		{
+			"ImportPath": "github.com/emersion/go-imap",
+			"Comment": "v0.9-2-gfb92935",
+			"Rev": "fb92935ec4342f99b26460d757b9e87c02366979"
+		},
+		{
+			"ImportPath": "github.com/emersion/go-imap/client",
+			"Comment": "v0.9-2-gfb92935",
+			"Rev": "fb92935ec4342f99b26460d757b9e87c02366979"
+		},
+		{
+			"ImportPath": "github.com/emersion/go-imap/commands",
+			"Comment": "v0.9-2-gfb92935",
+			"Rev": "fb92935ec4342f99b26460d757b9e87c02366979"
+		},
+		{
+			"ImportPath": "github.com/emersion/go-imap/responses",
+			"Comment": "v0.9-2-gfb92935",
+			"Rev": "fb92935ec4342f99b26460d757b9e87c02366979"
+		},
+		{
+			"ImportPath": "github.com/emersion/go-imap/utf7",
+			"Comment": "v0.9-2-gfb92935",
+			"Rev": "fb92935ec4342f99b26460d757b9e87c02366979"
+		},
+		{
+			"ImportPath": "github.com/emersion/go-sasl",
+			"Rev": "7e096a0a6197b89989e8cc31016daa67c8c62051"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding",
+			"Rev": "3491b61b9edc56653ad4333e605e2908e46a036b"
+		},
+		{
+			"ImportPath": "golang.org/x/text/encoding/internal/identifier",
+			"Rev": "3491b61b9edc56653ad4333e605e2908e46a036b"
+		},
+		{
+			"ImportPath": "golang.org/x/text/transform",
+			"Rev": "3491b61b9edc56653ad4333e605e2908e46a036b"
+		}
+	]
+}
