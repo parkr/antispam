@@ -36,6 +36,11 @@
 			"Rev": "7e096a0a6197b89989e8cc31016daa67c8c62051"
 		},
 		{
+			"ImportPath": "github.com/rakyll/statik/fs",
+			"Comment": "v0.1.0-8-g89fe345",
+			"Rev": "89fe3459b5c829c32e89bdff9c43f18aad728f2f"
+		},
+		{
 			"ImportPath": "golang.org/x/text/encoding",
 			"Rev": "3491b61b9edc56653ad4333e605e2908e46a036b"
 		},

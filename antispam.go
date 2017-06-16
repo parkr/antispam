@@ -1,15 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"log"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+
+	_ "github.com/parkr/antispam/statik"
+	"github.com/rakyll/statik/fs"
 )
+
+var globalDomainBlacklist []string
+var globalEmailBlacklist []string
 
 type config struct {
 	Address, Port              string
@@ -50,8 +58,12 @@ func spammySender(conf *config, sender *imap.Address) bool {
 
 	if isInStringSlice(conf.BadEmailDomains, sender.HostName) ||
 		isInStringSlice(conf.BadEmailDomains, sender.AtDomainList) ||
+		isInStringSlice(globalDomainBlacklist, sender.HostName) ||
+		isInStringSlice(globalDomainBlacklist, sender.AtDomainList) ||
 		isInStringSlice(conf.BadEmails, senderEmail) ||
-		isInStringSlice(conf.BadEmails, senderEmailAtDomain) {
+		isInStringSlice(conf.BadEmails, senderEmailAtDomain) ||
+		isInStringSlice(globalEmailBlacklist, senderEmail) ||
+		isInStringSlice(globalEmailBlacklist, senderEmailAtDomain) {
 		return true
 	}
 
@@ -74,6 +86,58 @@ func readConfig(filename string) *config {
 	sort.Strings(conf.BadEmails)
 
 	return conf
+}
+
+func readGlobalBlacklists() {
+	statikFS, err := fs.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Read the base domain blacklist. This changes infrequently.
+	f, err := statikFS.Open("/dom-bl-base.txt")
+	if err == nil {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			pieces := strings.Split(scanner.Text(), ";")
+			if len(pieces) > 0 {
+				globalDomainBlacklist = append(globalDomainBlacklist, pieces[0])
+			}
+		}
+	} else {
+		log.Println("error reading dom-bl-base.txt:", err)
+	}
+
+	// Read the more up-to-date domain blacklist subset.
+	f, err = statikFS.Open("/dom-bl.txt")
+	if err == nil {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			pieces := strings.Split(scanner.Text(), ";")
+			if len(pieces) > 0 {
+				globalDomainBlacklist = append(globalDomainBlacklist, pieces[0])
+			}
+		}
+	} else {
+		log.Println("error reading dom-bl.txt:", err)
+	}
+
+	// Read the email blacklist.
+	f, err = statikFS.Open("/from-bl.txt")
+	if err == nil {
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			pieces := strings.Split(scanner.Text(), ";")
+			if len(pieces) > 0 {
+				globalEmailBlacklist = append(globalEmailBlacklist, pieces[0])
+			}
+		}
+	} else {
+		log.Println("error reading from-bl.txt:", err)
+	}
+
+	sort.Strings(globalDomainBlacklist)
+	sort.Strings(globalEmailBlacklist)
 }
 
 func deleteMessage(c *client.Client, messageIndex uint32) {
@@ -104,6 +168,9 @@ func main() {
 
 	log.Println("Reading config...")
 	conf := readConfig(*confFile)
+
+	log.Println("Loading global blacklists...")
+	readGlobalBlacklists()
 
 	log.Println("Connecting to server...")
 
