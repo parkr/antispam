@@ -37,7 +37,7 @@ Two optional configuration options are `BadEmailDomains` and `BadEmails`.
 {
   ...
   "BadEmailDomains": ["horriblehepsebah.com", "iwillspamyou.biz"],
-  "BadEmails: ["somenastyspammer@gmail.com", "someonewhoseaccountwascompromised@verizon.net"]
+  "BadEmails": ["somenastyspammer@gmail.com", "someonewhoseaccountwascompromised@verizon.net"]
 }
 ```
 
