@@ -1,6 +1,12 @@
 all: build test
 
-bundle:
+godep:
+	go get github.com/tools/godep
+
+statik:
+	go get github.com/rakyll/statik
+
+bundle: godep statik
 	godep save github.com/parkr/antispam
 	statik -src=$(shell pwd)/blacklists
 
