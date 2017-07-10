@@ -49,8 +49,14 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 			}
 			log.Printf("Added %s to list of bad email domains", sender.HostName)
 		}
+		for _, sender := range msg.Envelope.Sender {
+			if !spammySender(conf, sender) {
+				conf.BadEmailDomains = append(conf.BadEmailDomains, sender.HostName)
+			}
+			log.Printf("Added %s to list of bad email domains", sender.HostName)
+		}
 		sort.Strings(conf.BadEmails)
-		log.Println(conf.BadEmails)
+		sort.Strings(conf.BadEmailDomains)
 		spam <- actionRequest{index: i, message: msg, action: "delete"}
 		i++
 	}
