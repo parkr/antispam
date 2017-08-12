@@ -13,5 +13,12 @@ bundle: godep statik
 build: bundle
 	go install github.com/parkr/antispam
 
-test: bundle
+test: bundle vet lint
 	go test github.com/parkr/antispam
+
+vet:
+	go vet github.com/parkr/antispam
+
+lint:
+	go get github.com/golang/lint/golint
+	golint github.com/parkr/antispam
