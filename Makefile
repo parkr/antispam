@@ -3,6 +3,9 @@ all: build test
 godep:
 	go get github.com/tools/godep
 
+golint:
+	go get github.com/golang/lint/golint
+
 statik:
 	go get github.com/rakyll/statik
 
@@ -19,6 +22,5 @@ test: bundle vet lint
 vet:
 	go vet github.com/parkr/antispam
 
-lint:
-	go get github.com/golang/lint/golint
+lint: golint
 	golint github.com/parkr/antispam
