@@ -44,8 +44,8 @@ func main() {
 	log.SetOutput(&output)
 	defer func() {
 		if r := recover(); r != nil {
+			fmt.Printf("An error occured! %+v\n", r)
 			fmt.Print(output.String())
-			fmt.Println(r)
 		}
 	}()
 
