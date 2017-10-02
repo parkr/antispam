@@ -6,6 +6,7 @@ godep:
 golint:
 	go get github.com/golang/lint/golint
 
+.PHONY: statik
 statik:
 	go get github.com/rakyll/statik
 
