@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -61,7 +60,6 @@ func New() (http.FileSystem, error) {
 		if err != nil {
 			return nil, fmt.Errorf("statik/fs: error unzipping file %q: %s", zipFile.Name, err)
 		}
-		log.Println("/" + zipFile.Name)
 		files["/"+zipFile.Name] = file{
 			FileInfo: zipFile.FileInfo(),
 			data:     unzipped,
