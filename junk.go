@@ -52,6 +52,7 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 		from = mbox.Messages - numMessages
 	}
 	seqset := new(imap.SeqSet)
+	log.Printf("Loading messages from %d to %d", from, to)
 	seqset.AddRange(from, to)
 
 	messages := make(chan *imap.Message, numMessages)
