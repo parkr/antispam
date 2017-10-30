@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
+	"os"
 	"sort"
 
 	"github.com/emersion/go-imap"
@@ -39,13 +42,27 @@ func deleteMessage(c *client.Client, messageIndex uint32) {
 	}
 }
 
+func printOutput(output io.Reader) {
+	if output == nil {
+		return
+	}
+
+	outputString, err := ioutil.ReadAll(output)
+	if err != nil {
+		fmt.Printf("error reading output buffer: %+v\n", err)
+		return
+	}
+
+	fmt.Print(outputString)
+}
+
 func main() {
-	var output bytes.Buffer
-	log.SetOutput(&output)
+	var output io.ReadWriter
+
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("An error occured! %+v\n", r)
-			fmt.Print(output.String())
+			printOutput(output)
 		}
 	}()
 
@@ -57,6 +74,13 @@ func main() {
 	if *confFile == "" {
 		panic("Specify the -config flag")
 	}
+
+	if *debugFlag {
+		output = os.Stderr
+	} else {
+		output = &bytes.Buffer{}
+	}
+	log.SetOutput(output)
 
 	log.Println("Reading config...")
 	conf := readConfig(*confFile)
@@ -72,8 +96,8 @@ func main() {
 		panic(err)
 	}
 	log.Println("Connected")
-	c.ErrorLog = log.New(&output, "imap/client: ", log.LstdFlags)
-	c.SetDebug(&output)
+	c.ErrorLog = log.New(output, "imap/client: ", log.LstdFlags)
+	c.SetDebug(output)
 
 	// Don't forget to logout
 	defer c.Logout()
@@ -109,8 +133,4 @@ func main() {
 	writeNewConfig(*confFile, conf)
 
 	log.Println("Done!")
-
-	if *debugFlag == true {
-		fmt.Print(output.String())
-	}
 }
