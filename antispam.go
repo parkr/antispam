@@ -47,13 +47,13 @@ func printOutput(output io.Reader) {
 		return
 	}
 
-	outputString, err := ioutil.ReadAll(output)
+	outputBytes, err := ioutil.ReadAll(output)
 	if err != nil {
 		fmt.Printf("error reading output buffer: %+v\n", err)
 		return
 	}
 
-	fmt.Print(outputString)
+	fmt.Print(string(outputBytes))
 }
 
 func main() {
