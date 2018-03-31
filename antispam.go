@@ -14,6 +14,8 @@ import (
 	"github.com/emersion/go-imap/client"
 )
 
+var defaultFilterFile = "/tmp/antispam-filter.json"
+
 type actionRequest struct {
 	index   uint32
 	message *imap.Message
@@ -68,6 +70,7 @@ func main() {
 
 	debugFlag := flag.Bool("debug", false, "Whether to print debug info")
 	confFile := flag.String("config", "", "Path to config file")
+	filterFile := flag.String("filter", defaultFilterFile, "Path to filter file (must be read-writable)")
 	numMessagesFromFlag := flag.Uint("num", 10, "Number of messages to process per execution")
 	flag.Parse()
 
@@ -82,8 +85,17 @@ func main() {
 	}
 	log.SetOutput(output)
 
+	if *filterFile == "" {
+		filterFile = &defaultFilterFile
+	}
+
 	log.Println("Reading config...")
 	conf := readConfig(*confFile)
+
+	log.Printf("Reading filter file %s", *filterFile)
+	if err := readFilterFile(conf, *filterFile); err != nil {
+		panic(err)
+	}
 
 	log.Println("Loading global blacklists...")
 	readGlobalBlacklists()
@@ -130,7 +142,7 @@ func main() {
 	processJunkFolder(c, conf, "Spam", numMessages) // Things we manually label as Junk will be added to our config.
 	processInbox(c, conf, numMessages)              // Remove spam from the inbox.
 
-	writeNewConfig(*confFile, conf)
+	writeNewFilterFile(*filterFile, conf)
 
 	log.Println("Done!")
 }
