@@ -83,9 +83,9 @@ func ParseParamList(fields []interface{}) (map[string]string, error) {
 
 	var k string
 	for i, f := range fields {
-		p, err := ParseString(f)
-		if err != nil {
-			return nil, errors.New("Parameter list contains a non-string: " + err.Error())
+		p, ok := f.(string)
+		if !ok {
+			return nil, errors.New("Parameter list contains a non-string")
 		}
 
 		if i%2 == 0 {
@@ -257,7 +257,7 @@ func (m *Message) Parse(fields []interface{}) error {
 			default:
 				// Likely to be a section of the body
 				// First check that the section name is correct
-				if section, err := ParseBodySectionName(k); err != nil {
+				if section, err := NewBodySectionName(k); err != nil {
 					// Not a section name, maybe an attribute defined in an IMAP extension
 					m.Items[k] = f
 				} else {
@@ -486,9 +486,9 @@ func (section *BodySectionName) ExtractPartial(b []byte) []byte {
 	return b[from:to]
 }
 
-// ParseBodySectionName parses a body section name.
-func ParseBodySectionName(s string) (section *BodySectionName, err error) {
-	section = new(BodySectionName)
+// Parse a body section name.
+func NewBodySectionName(s string) (section *BodySectionName, err error) {
+	section = &BodySectionName{}
 	err = section.parse(s)
 	return
 }
@@ -605,17 +605,17 @@ func (addr *Address) Parse(fields []interface{}) error {
 		return errors.New("Address doesn't contain 4 fields")
 	}
 
-	if s, err := ParseString(fields[0]); err == nil {
-		addr.PersonalName, _ = decodeHeader(s)
+	if f, ok := fields[0].(string); ok {
+		addr.PersonalName, _ = decodeHeader(f)
 	}
-	if s, err := ParseString(fields[1]); err == nil {
-		addr.AtDomainList, _ = decodeHeader(s)
+	if f, ok := fields[1].(string); ok {
+		addr.AtDomainList = f
 	}
-	if s, err := ParseString(fields[2]); err == nil {
-		addr.MailboxName, _ = decodeHeader(s)
+	if f, ok := fields[2].(string); ok {
+		addr.MailboxName = f
 	}
-	if s, err := ParseString(fields[3]); err == nil {
-		addr.HostName, _ = decodeHeader(s)
+	if f, ok := fields[3].(string); ok {
+		addr.HostName = f
 	}
 
 	return nil
@@ -702,7 +702,7 @@ func (e *Envelope) Parse(fields []interface{}) error {
 	if date, ok := fields[0].(string); ok {
 		e.Date, _ = parseMessageDateTime(date)
 	}
-	if subject, err := ParseString(fields[1]); err == nil {
+	if subject, ok := fields[1].(string); ok {
 		e.Subject, _ = decodeHeader(subject)
 	}
 	if from, ok := fields[2].([]interface{}); ok {
@@ -880,7 +880,7 @@ func (bs *BodyStructure) Parse(fields []interface{}) error {
 		bs.Params, _ = parseHeaderParamList(params)
 
 		bs.Id, _ = fields[3].(string)
-		if desc, err := ParseString(fields[4]); err == nil {
+		if desc, ok := fields[4].(string); ok {
 			bs.Description, _ = decodeHeader(desc)
 		}
 		bs.Encoding, _ = fields[5].(string)

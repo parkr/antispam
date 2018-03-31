@@ -2,6 +2,7 @@ package commands
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/utf7"
@@ -32,18 +33,22 @@ func (cmd *Status) Parse(fields []interface{}) error {
 		return errors.New("No enough arguments")
 	}
 
-	if mailbox, err := imap.ParseString(fields[0]); err != nil {
-		return err
+	if mailbox, ok := fields[0].(string); !ok {
+		return errors.New("Mailbox name must be a string")
 	} else if mailbox, err := utf7.Decoder.String(mailbox); err != nil {
 		return err
 	} else {
 		cmd.Mailbox = imap.CanonicalMailboxName(mailbox)
 	}
 
-	if items, err := imap.ParseStringList(fields[1]); err != nil {
-		return err
+	if items, ok := fields[1].([]interface{}); !ok {
+		return errors.New("Items must be a list")
 	} else {
-		cmd.Items = items
+		cmd.Items = make([]string, len(items))
+		for i, v := range items {
+			item, _ := v.(string)
+			cmd.Items[i] = strings.ToUpper(item)
+		}
 	}
 
 	return nil

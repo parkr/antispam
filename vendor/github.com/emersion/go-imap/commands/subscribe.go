@@ -21,17 +21,21 @@ func (cmd *Subscribe) Command() *imap.Command {
 	}
 }
 
-func (cmd *Subscribe) Parse(fields []interface{}) error {
+func (cmd *Subscribe) Parse(fields []interface{}) (err error) {
 	if len(fields) < 0 {
 		return errors.New("No enogh arguments")
 	}
 
-	if mailbox, err := imap.ParseString(fields[0]); err != nil {
-		return err
-	} else if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
+	mailbox, ok := fields[0].(string)
+	if !ok {
+		return errors.New("Mailbox name must be a string")
+	}
+
+	if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
 		return err
 	}
-	return nil
+
+	return
 }
 
 // An UNSUBSCRIBE command.
@@ -49,15 +53,19 @@ func (cmd *Unsubscribe) Command() *imap.Command {
 	}
 }
 
-func (cmd *Unsubscribe) Parse(fields []interface{}) error {
+func (cmd *Unsubscribe) Parse(fields []interface{}) (err error) {
 	if len(fields) < 0 {
 		return errors.New("No enogh arguments")
 	}
 
-	if mailbox, err := imap.ParseString(fields[0]); err != nil {
-		return err
-	} else if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
+	mailbox, ok := fields[0].(string)
+	if !ok {
+		return errors.New("Mailbox name must be a string")
+	}
+
+	if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
 		return err
 	}
-	return nil
+
+	return
 }

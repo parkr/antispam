@@ -65,15 +65,13 @@ type Client struct {
 	Timeout time.Duration
 }
 
-func (c *Client) read(greeted <-chan struct{}) error {
-	greetedClosed := false
-
+func (c *Client) read(greeted chan struct{}) error {
 	defer func() {
 		// Ensure we close the greeted channel. New may be waiting on an indication
 		// that we've seen the greeting.
-		if !greetedClosed {
+		if c.greeted != nil {
 			close(c.greeted)
-			greetedClosed = true
+			c.greeted = nil
 		}
 		close(c.handles)
 		close(c.loggedOut)
@@ -91,9 +89,9 @@ func (c *Client) read(greeted <-chan struct{}) error {
 			first = false
 		} else {
 			<-greeted
-			if !greetedClosed {
+			if c.greeted != nil {
 				close(c.greeted)
-				greetedClosed = true
+				c.greeted = nil
 			}
 		}
 
@@ -262,7 +260,6 @@ func (c *Client) handleUnilateral() {
 	// otherwise some messages will be lost.
 	go c.read(greeted)
 
-	first := true
 	for h := range hdlr {
 		switch res := h.Resp.(type) {
 		case *imap.StatusResp:
@@ -274,7 +271,7 @@ func (c *Client) handleUnilateral() {
 			}
 			h.Accept()
 
-			if first {
+			if greeted != nil {
 				switch res.Type {
 				case imap.StatusPreauth:
 					c.State = imap.AuthenticatedState
@@ -292,7 +289,7 @@ func (c *Client) handleUnilateral() {
 				}
 
 				close(greeted)
-				first = false
+				greeted = nil
 			}
 
 			switch res.Type {

@@ -29,14 +29,14 @@ func (cmd *Copy) Parse(fields []interface{}) error {
 
 	if seqSet, ok := fields[0].(string); !ok {
 		return errors.New("Invalid sequence set")
-	} else if seqSet, err := imap.ParseSeqSet(seqSet); err != nil {
+	} else if seqSet, err := imap.NewSeqSet(seqSet); err != nil {
 		return err
 	} else {
 		cmd.SeqSet = seqSet
 	}
 
-	if mailbox, err := imap.ParseString(fields[1]); err != nil {
-		return err
+	if mailbox, ok := fields[1].(string); !ok {
+		return errors.New("Mailbox name must be a string")
 	} else if mailbox, err := utf7.Decoder.String(mailbox); err != nil {
 		return err
 	} else {

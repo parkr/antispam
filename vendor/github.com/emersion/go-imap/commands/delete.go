@@ -26,8 +26,8 @@ func (cmd *Delete) Parse(fields []interface{}) error {
 		return errors.New("No enough arguments")
 	}
 
-	if mailbox, err := imap.ParseString(fields[0]); err != nil {
-		return err
+	if mailbox, ok := fields[0].(string); !ok {
+		return errors.New("Mailbox name must be a string")
 	} else if mailbox, err := utf7.Decoder.String(mailbox); err != nil {
 		return err
 	} else {

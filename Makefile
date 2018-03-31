@@ -2,9 +2,6 @@ REV=$(shell git rev-parse HEAD)
 
 all: build test
 
-godep:
-	go get github.com/tools/godep
-
 golint:
 	go get github.com/golang/lint/golint
 
@@ -12,8 +9,8 @@ golint:
 statik:
 	go get github.com/rakyll/statik
 
-bundle: godep statik
-	godep save github.com/parkr/antispam
+bundle: statik
+	dep ensure && dep prune
 	statik -src=$(shell pwd)/blacklists
 
 build: bundle

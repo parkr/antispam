@@ -16,7 +16,7 @@ type Fetch struct {
 func (cmd *Fetch) Command() *imap.Command {
 	items := make([]interface{}, len(cmd.Items))
 	for i, item := range cmd.Items {
-		if section, err := imap.ParseBodySectionName(item); err == nil {
+		if section, err := imap.NewBodySectionName(item); err == nil {
 			items[i] = section
 		} else {
 			items[i] = item
@@ -34,10 +34,13 @@ func (cmd *Fetch) Parse(fields []interface{}) error {
 		return errors.New("No enough arguments")
 	}
 
+	seqset, ok := fields[0].(string)
+	if !ok {
+		return errors.New("Sequence set must be a string")
+	}
+
 	var err error
-	if seqset, ok := fields[0].(string); !ok {
-		return errors.New("Sequence set must be an atom")
-	} else if cmd.SeqSet, err = imap.ParseSeqSet(seqset); err != nil {
+	if cmd.SeqSet, err = imap.NewSeqSet(seqset); err != nil {
 		return err
 	}
 

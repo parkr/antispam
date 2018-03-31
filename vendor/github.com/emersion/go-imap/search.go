@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/textproto"
 	"strings"
 	"time"
@@ -42,8 +43,8 @@ func convertField(f interface{}, charsetReader func(io.Reader) io.Reader) string
 		}
 	}
 
-	b := make([]byte, l.Len())
-	if _, err := io.ReadFull(r, b); err != nil {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
 		return ""
 	}
 	return string(b)
@@ -237,7 +238,7 @@ func (c *SearchCriteria) parseField(fields []interface{}, charsetReader func(io.
 	case "UID":
 		if f, fields, err = popSearchField(fields); err != nil {
 			return nil, err
-		} else if c.Uid, err = ParseSeqSet(maybeString(f)); err != nil {
+		} else if c.Uid, err = NewSeqSet(maybeString(f)); err != nil {
 			return nil, err
 		}
 	case "UNANSWERED", "UNDELETED", "UNDRAFT", "UNFLAGGED", "UNSEEN":
@@ -250,7 +251,7 @@ func (c *SearchCriteria) parseField(fields []interface{}, charsetReader func(io.
 			c.WithoutFlags = append(c.WithoutFlags, CanonicalFlag(maybeString(f)))
 		}
 	default: // Try to parse a sequence set
-		if c.SeqNum, err = ParseSeqSet(key); err != nil {
+		if c.SeqNum, err = NewSeqSet(key); err != nil {
 			return nil, err
 		}
 	}
