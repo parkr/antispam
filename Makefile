@@ -1,3 +1,5 @@
+REV=$(shell git rev-parse HEAD)
+
 all: build test
 
 godep:
@@ -25,3 +27,9 @@ vet:
 
 lint: golint
 	golint github.com/parkr/antispam
+
+docker-build:
+	docker build -t parkr/antispam:$(REV) .
+
+docker-release: docker-build
+	docker push parkr/antispam:$(REV)
