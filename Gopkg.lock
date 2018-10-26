@@ -2,44 +2,64 @@
 
 
 [[projects]]
+  digest = "1:efc1375872ec278a98d9b9200bb93ffc7f0713ce5fb7ca8ca0609bedb8b72ef3"
   name = "github.com/emersion/go-imap"
   packages = [
     ".",
     "client",
     "commands",
     "responses",
-    "utf7"
+    "utf7",
   ]
+  pruneopts = "UT"
   revision = "840b16b212bff35b595e708937c6d60861cfab49"
   version = "v0.9"
 
 [[projects]]
   branch = "master"
+  digest = "1:7cc7f47cf4e6f9be30f0e38934f6470cf4c35c9479350bc5e764d3e428018e2e"
   name = "github.com/emersion/go-sasl"
   packages = ["."]
+  pruneopts = "UT"
   revision = "7e096a0a6197b89989e8cc31016daa67c8c62051"
 
 [[projects]]
+  digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
   name = "github.com/rakyll/statik"
   packages = ["fs"]
-  revision = "fd36b3595eb2ec8da4b8153b107f7ea08504899d"
-  version = "v0.1.1"
+  pruneopts = "UT"
+  revision = "1355192d24db2566a83c3914e187e2a7e7679832"
+  version = "v0.1.5"
 
 [[projects]]
+  digest = "1:37672ad5821719e2df8509c2edd4ba5ae192463237c73c3a2d24ef8b2bc9e36f"
   name = "golang.org/x/text"
   packages = [
     "encoding",
     "encoding/internal/identifier",
     "internal/gen",
     "transform",
-    "unicode/cldr"
+    "unicode/cldr",
   ]
+  pruneopts = "UT"
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cc40602124a9440aaea2149dccb89875ba64986d25fc535c23855409613e40ea"
+  input-imports = [
+    "github.com/emersion/go-imap",
+    "github.com/emersion/go-imap/client",
+    "github.com/emersion/go-imap/commands",
+    "github.com/emersion/go-imap/responses",
+    "github.com/emersion/go-imap/utf7",
+    "github.com/emersion/go-sasl",
+    "github.com/rakyll/statik/fs",
+    "golang.org/x/text/encoding",
+    "golang.org/x/text/encoding/internal/identifier",
+    "golang.org/x/text/transform",
+    "golang.org/x/text/unicode/cldr",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
