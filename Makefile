@@ -10,7 +10,6 @@ statik:
 	go get github.com/rakyll/statik
 
 bundle: statik
-	dep ensure && dep prune
 	statik -src=$(shell pwd)/blacklists
 
 build: bundle
