@@ -69,7 +69,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 	spam := make(chan actionRequest, numMessages)
 	done := make(chan error, 1)
 	go func() {
-		done <- c.Fetch(seqset, []string{imap.EnvelopeMsgAttr}, messages)
+		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
 	}()
 
 	log.Printf("Last %d messages:", numMessages)

@@ -32,7 +32,7 @@ func deleteMessage(c *client.Client, messageIndex uint32) {
 	seqset.AddRange(messageIndex, messageIndex)
 
 	// First mark the message as deleted
-	operation := "+FLAGS.SILENT"
+	operation := imap.FormatFlagsOp(imap.AddFlags, true)
 	flags := []interface{}{imap.DeletedFlag}
 	if err := c.Store(seqset, operation, flags, nil); err != nil {
 		panic(err)
