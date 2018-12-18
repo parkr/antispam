@@ -11,135 +11,132 @@ type Select struct {
 	Mailbox *imap.MailboxStatus
 }
 
-func (r *Select) HandleFrom(hdlr imap.RespHandler) (err error) {
+func (r *Select) Handle(resp imap.Resp) error {
 	if r.Mailbox == nil {
-		r.Mailbox = &imap.MailboxStatus{}
+		r.Mailbox = &imap.MailboxStatus{Items: make(map[imap.StatusItem]interface{})}
 	}
 	mbox := r.Mailbox
 
-	mbox.Items = make(map[string]interface{})
-	for h := range hdlr {
-		switch res := h.Resp.(type) {
-		case *imap.Resp:
-			fields, ok := h.AcceptNamedResp(imap.MailboxFlags)
-			if !ok {
-				break
-			}
+	switch resp := resp.(type) {
+	case *imap.DataResp:
+		name, fields, ok := imap.ParseNamedResp(resp)
+		if !ok || name != "FLAGS" {
+			return ErrUnhandled
+		} else if len(fields) < 1 {
+			return errNotEnoughFields
+		}
 
-			flags, _ := fields[0].([]interface{})
-			mbox.Flags, _ = imap.ParseStringList(flags)
+		flags, _ := fields[0].([]interface{})
+		mbox.Flags, _ = imap.ParseStringList(flags)
+	case *imap.StatusResp:
+		if len(resp.Arguments) < 1 {
+			return ErrUnhandled
+		}
+
+		var item imap.StatusItem
+		switch resp.Code {
+		case "UNSEEN":
+			mbox.UnseenSeqNum, _ = imap.ParseNumber(resp.Arguments[0])
+		case "PERMANENTFLAGS":
+			flags, _ := resp.Arguments[0].([]interface{})
+			mbox.PermanentFlags, _ = imap.ParseStringList(flags)
+		case "UIDNEXT":
+			mbox.UidNext, _ = imap.ParseNumber(resp.Arguments[0])
+			item = imap.StatusUidNext
+		case "UIDVALIDITY":
+			mbox.UidValidity, _ = imap.ParseNumber(resp.Arguments[0])
+			item = imap.StatusUidValidity
+		default:
+			return ErrUnhandled
+		}
+
+		if item != "" {
 			mbox.ItemsLocker.Lock()
-			mbox.Items[imap.MailboxFlags] = nil
+			mbox.Items[item] = nil
 			mbox.ItemsLocker.Unlock()
-		case *imap.StatusResp:
-			if len(res.Arguments) < 1 {
-				h.Accepts <- false
-				break
-			}
+		}
+	default:
+		return ErrUnhandled
+	}
+	return nil
+}
 
-			accepted := true
-			switch res.Code {
-			case imap.MailboxUnseen:
-				mbox.Unseen, _ = imap.ParseNumber(res.Arguments[0])
-				mbox.ItemsLocker.Lock()
-				mbox.Items[imap.MailboxUnseen] = nil
-				mbox.ItemsLocker.Unlock()
-			case imap.MailboxPermanentFlags:
-				flags, _ := res.Arguments[0].([]interface{})
-				mbox.PermanentFlags, _ = imap.ParseStringList(flags)
-				mbox.ItemsLocker.Lock()
-				mbox.Items[imap.MailboxPermanentFlags] = nil
-				mbox.ItemsLocker.Unlock()
-			case imap.MailboxUidNext:
-				mbox.UidNext, _ = imap.ParseNumber(res.Arguments[0])
-				mbox.ItemsLocker.Lock()
-				mbox.Items[imap.MailboxUidNext] = nil
-				mbox.ItemsLocker.Unlock()
-			case imap.MailboxUidValidity:
-				mbox.UidValidity, _ = imap.ParseNumber(res.Arguments[0])
-				mbox.ItemsLocker.Lock()
-				mbox.Items[imap.MailboxUidValidity] = nil
-				mbox.ItemsLocker.Unlock()
-			default:
-				accepted = false
-			}
-			h.Accepts <- accepted
+func (r *Select) WriteTo(w *imap.Writer) error {
+	mbox := r.Mailbox
+
+	if mbox.Flags != nil {
+		flags := make([]interface{}, len(mbox.Flags))
+		for i, f := range mbox.Flags {
+			flags[i] = imap.Atom(f)
+		}
+		res := imap.NewUntaggedResp([]interface{}{"FLAGS", flags})
+		if err := res.WriteTo(w); err != nil {
+			return err
 		}
 	}
 
-	return
-}
+	if mbox.PermanentFlags != nil {
+		flags := make([]interface{}, len(mbox.PermanentFlags))
+		for i, f := range mbox.PermanentFlags {
+			flags[i] = imap.Atom(f)
+		}
+		statusRes := &imap.StatusResp{
+			Type:      imap.StatusRespOk,
+			Code:      imap.CodePermanentFlags,
+			Arguments: []interface{}{flags},
+			Info:      "Flags permitted.",
+		}
+		if err := statusRes.WriteTo(w); err != nil {
+			return err
+		}
+	}
 
-func (r *Select) WriteTo(w *imap.Writer) (err error) {
-	status := r.Mailbox
+	if mbox.UnseenSeqNum > 0 {
+		statusRes := &imap.StatusResp{
+			Type:      imap.StatusRespOk,
+			Code:      imap.CodeUnseen,
+			Arguments: []interface{}{mbox.UnseenSeqNum},
+			Info:      fmt.Sprintf("Message %d is first unseen", mbox.UnseenSeqNum),
+		}
+		if err := statusRes.WriteTo(w); err != nil {
+			return err
+		}
+	}
 
 	for k := range r.Mailbox.Items {
 		switch k {
-		case imap.MailboxFlags:
-			flags := make([]interface{}, len(status.Flags))
-			for i, f := range status.Flags {
-				flags[i] = f
+		case imap.StatusMessages:
+			res := imap.NewUntaggedResp([]interface{}{mbox.Messages, "EXISTS"})
+			if err := res.WriteTo(w); err != nil {
+				return err
 			}
-			res := imap.NewUntaggedResp([]interface{}{"FLAGS", flags})
-			if err = res.WriteTo(w); err != nil {
-				return
+		case imap.StatusRecent:
+			res := imap.NewUntaggedResp([]interface{}{mbox.Recent, "RECENT"})
+			if err := res.WriteTo(w); err != nil {
+				return err
 			}
-		case imap.MailboxPermanentFlags:
-			flags := make([]interface{}, len(status.PermanentFlags))
-			for i, f := range status.PermanentFlags {
-				flags[i] = f
-			}
+		case imap.StatusUidNext:
 			statusRes := &imap.StatusResp{
-				Type:      imap.StatusOk,
-				Code:      imap.CodePermanentFlags,
-				Arguments: []interface{}{flags},
-				Info:      "Flags permitted.",
-			}
-			if err = statusRes.WriteTo(w); err != nil {
-				return
-			}
-		case imap.MailboxMessages:
-			res := imap.NewUntaggedResp([]interface{}{status.Messages, "EXISTS"})
-			if err = res.WriteTo(w); err != nil {
-				return
-			}
-		case imap.MailboxRecent:
-			res := imap.NewUntaggedResp([]interface{}{status.Recent, "RECENT"})
-			if err = res.WriteTo(w); err != nil {
-				return
-			}
-		case imap.MailboxUnseen:
-			statusRes := &imap.StatusResp{
-				Type:      imap.StatusOk,
-				Code:      imap.CodeUnseen,
-				Arguments: []interface{}{status.Unseen},
-				Info:      fmt.Sprintf("Message %d is first unseen", status.Unseen),
-			}
-			if err = statusRes.WriteTo(w); err != nil {
-				return
-			}
-		case imap.MailboxUidNext:
-			statusRes := &imap.StatusResp{
-				Type:      imap.StatusOk,
+				Type:      imap.StatusRespOk,
 				Code:      imap.CodeUidNext,
-				Arguments: []interface{}{status.UidNext},
+				Arguments: []interface{}{mbox.UidNext},
 				Info:      "Predicted next UID",
 			}
-			if err = statusRes.WriteTo(w); err != nil {
-				return
+			if err := statusRes.WriteTo(w); err != nil {
+				return err
 			}
-		case imap.MailboxUidValidity:
+		case imap.StatusUidValidity:
 			statusRes := &imap.StatusResp{
-				Type:      imap.StatusOk,
+				Type:      imap.StatusRespOk,
 				Code:      imap.CodeUidValidity,
-				Arguments: []interface{}{status.UidValidity},
+				Arguments: []interface{}{mbox.UidValidity},
 				Info:      "UIDs valid",
 			}
-			if err = statusRes.WriteTo(w); err != nil {
-				return
+			if err := statusRes.WriteTo(w); err != nil {
+				return err
 			}
 		}
 	}
 
-	return
+	return nil
 }

@@ -62,7 +62,7 @@ type reader interface {
 	StringReader
 }
 
-// Convert a field to a number.
+// ParseNumber parses a number.
 func ParseNumber(f interface{}) (uint32, error) {
 	// Useful for tests
 	if n, ok := f.(uint32); ok {
@@ -71,7 +71,7 @@ func ParseNumber(f interface{}) (uint32, error) {
 
 	s, ok := f.(string)
 	if !ok {
-		return 0, newParseError("number is not a string")
+		return 0, newParseError("expected a number, got a non-atom")
 	}
 
 	nbr, err := strconv.ParseUint(s, 10, 32)
@@ -82,18 +82,44 @@ func ParseNumber(f interface{}) (uint32, error) {
 	return uint32(nbr), nil
 }
 
+// ParseString parses a string, which is either a literal, a quoted string or an
+// atom.
+func ParseString(f interface{}) (string, error) {
+	if s, ok := f.(string); ok {
+		return s, nil
+	}
+
+	// Useful for tests
+	if q, ok := f.(Quoted); ok {
+		return string(q), nil
+	}
+	if a, ok := f.(Atom); ok {
+		return string(a), nil
+	}
+
+	if l, ok := f.(Literal); ok {
+		b := make([]byte, l.Len())
+		if _, err := io.ReadFull(l, b); err != nil {
+			return "", err
+		}
+		return string(b), nil
+	}
+
+	return "", newParseError("expected a string")
+}
+
 // Convert a field list to a string list.
 func ParseStringList(f interface{}) ([]string, error) {
 	fields, ok := f.([]interface{})
 	if !ok {
-		return nil, newParseError("string list is not a list")
+		return nil, newParseError("expected a string list, got a non-list")
 	}
 
 	list := make([]string, len(fields))
 	for i, f := range fields {
-		var ok bool
-		if list[i], ok = f.(string); !ok {
-			return nil, newParseError("string list contains a non-string")
+		var err error
+		if list[i], err = ParseString(f); err != nil {
+			return nil, newParseError("cannot parse string in string list: " + err.Error())
 		}
 	}
 	return list, nil
@@ -121,7 +147,7 @@ func (r *Reader) ReadSp() error {
 		return err
 	}
 	if char != sp {
-		return newParseError("not a space")
+		return newParseError("expected a space")
 	}
 	return nil
 }
@@ -134,6 +160,7 @@ func (r *Reader) ReadCrlf() (err error) {
 	}
 	if char != cr {
 		err = newParseError("line doesn't end with a CR")
+		return
 	}
 
 	if char, _, err = r.ReadRune(); err != nil {
@@ -305,6 +332,9 @@ func (r *Reader) ReadFields() (fields []interface{}, err error) {
 			return
 		}
 		if char == cr || char == listEnd || char == respCodeEnd {
+			if char == cr {
+				r.UnreadRune()
+			}
 			return
 		}
 		if char == listStart {
@@ -354,7 +384,7 @@ func (r *Reader) ReadLine() (fields []interface{}, err error) {
 	return
 }
 
-func (r *Reader) ReadRespCode() (code string, fields []interface{}, err error) {
+func (r *Reader) ReadRespCode() (code StatusRespCode, fields []interface{}, err error) {
 	char, _, err := r.ReadRune()
 	if err != nil {
 		return
@@ -376,15 +406,16 @@ func (r *Reader) ReadRespCode() (code string, fields []interface{}, err error) {
 		return
 	}
 
-	code, ok := fields[0].(string)
+	codeStr, ok := fields[0].(string)
 	if !ok {
 		err = newParseError("response code doesn't start with a string atom")
 		return
 	}
-	if code == "" {
+	if codeStr == "" {
 		err = newParseError("response code is empty")
 		return
 	}
+	code = StatusRespCode(strings.ToUpper(codeStr))
 
 	fields = fields[1:]
 

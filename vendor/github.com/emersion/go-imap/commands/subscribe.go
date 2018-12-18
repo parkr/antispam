@@ -13,29 +13,25 @@ type Subscribe struct {
 }
 
 func (cmd *Subscribe) Command() *imap.Command {
-	mailbox, _ := utf7.Encoder.String(cmd.Mailbox)
+	mailbox, _ := utf7.Encoding.NewEncoder().String(cmd.Mailbox)
 
 	return &imap.Command{
-		Name:      imap.Subscribe,
+		Name:      "SUBSCRIBE",
 		Arguments: []interface{}{mailbox},
 	}
 }
 
-func (cmd *Subscribe) Parse(fields []interface{}) (err error) {
+func (cmd *Subscribe) Parse(fields []interface{}) error {
 	if len(fields) < 0 {
-		return errors.New("No enogh arguments")
+		return errors.New("No enough arguments")
 	}
 
-	mailbox, ok := fields[0].(string)
-	if !ok {
-		return errors.New("Mailbox name must be a string")
-	}
-
-	if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
+	if mailbox, err := imap.ParseString(fields[0]); err != nil {
+		return err
+	} else if cmd.Mailbox, err = utf7.Encoding.NewDecoder().String(mailbox); err != nil {
 		return err
 	}
-
-	return
+	return nil
 }
 
 // An UNSUBSCRIBE command.
@@ -45,27 +41,23 @@ type Unsubscribe struct {
 }
 
 func (cmd *Unsubscribe) Command() *imap.Command {
-	mailbox, _ := utf7.Encoder.String(cmd.Mailbox)
+	mailbox, _ := utf7.Encoding.NewEncoder().String(cmd.Mailbox)
 
 	return &imap.Command{
-		Name:      imap.Unsubscribe,
+		Name:      "UNSUBSCRIBE",
 		Arguments: []interface{}{mailbox},
 	}
 }
 
-func (cmd *Unsubscribe) Parse(fields []interface{}) (err error) {
+func (cmd *Unsubscribe) Parse(fields []interface{}) error {
 	if len(fields) < 0 {
 		return errors.New("No enogh arguments")
 	}
 
-	mailbox, ok := fields[0].(string)
-	if !ok {
-		return errors.New("Mailbox name must be a string")
-	}
-
-	if cmd.Mailbox, err = utf7.Decoder.String(mailbox); err != nil {
+	if mailbox, err := imap.ParseString(fields[0]); err != nil {
+		return err
+	} else if cmd.Mailbox, err = utf7.Encoding.NewDecoder().String(mailbox); err != nil {
 		return err
 	}
-
-	return
+	return nil
 }

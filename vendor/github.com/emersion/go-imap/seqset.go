@@ -122,8 +122,8 @@ type SeqSet struct {
 	Set []Seq
 }
 
-// NewSeqSet returns a new SeqSet instance after parsing the set string.
-func NewSeqSet(set string) (s *SeqSet, err error) {
+// ParseSeqSet returns a new SeqSet instance after parsing the set string.
+func ParseSeqSet(set string) (s *SeqSet, err error) {
 	s = new(SeqSet)
 	return s, s.Add(set)
 }
@@ -268,7 +268,6 @@ func (s *SeqSet) insertAt(i int, v Seq) {
 		s.Set = set
 	}
 	s.Set[i] = v
-	return
 }
 
 // search attempts to find the index of the sequence set value that contains q.

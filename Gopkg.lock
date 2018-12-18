@@ -2,7 +2,8 @@
 
 
 [[projects]]
-  digest = "1:efc1375872ec278a98d9b9200bb93ffc7f0713ce5fb7ca8ca0609bedb8b72ef3"
+  branch = "v1"
+  digest = "1:953241ce5262332fe6cf733e975d6e8604f484dfd83a4d464dbc1ce02ca1efbe"
   name = "github.com/emersion/go-imap"
   packages = [
     ".",
@@ -12,8 +13,7 @@
     "utf7",
   ]
   pruneopts = "UT"
-  revision = "840b16b212bff35b595e708937c6d60861cfab49"
-  version = "v0.9"
+  revision = "5624370d373684a22740d08438dd4318ad41b9fe"
 
 [[projects]]
   branch = "master"
@@ -24,12 +24,12 @@
   revision = "7e096a0a6197b89989e8cc31016daa67c8c62051"
 
 [[projects]]
+  branch = "master"
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
   name = "github.com/rakyll/statik"
   packages = ["fs"]
   pruneopts = "UT"
-  revision = "1355192d24db2566a83c3914e187e2a7e7679832"
-  version = "v0.1.5"
+  revision = "79258177a57a85a8ab2eca7ce0936aad80307f4e"
 
 [[projects]]
   digest = "1:37672ad5821719e2df8509c2edd4ba5ae192463237c73c3a2d24ef8b2bc9e36f"
@@ -51,15 +51,7 @@
   input-imports = [
     "github.com/emersion/go-imap",
     "github.com/emersion/go-imap/client",
-    "github.com/emersion/go-imap/commands",
-    "github.com/emersion/go-imap/responses",
-    "github.com/emersion/go-imap/utf7",
-    "github.com/emersion/go-sasl",
     "github.com/rakyll/statik/fs",
-    "golang.org/x/text/encoding",
-    "golang.org/x/text/encoding/internal/identifier",
-    "golang.org/x/text/transform",
-    "golang.org/x/text/unicode/cldr",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

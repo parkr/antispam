@@ -2,6 +2,7 @@ package imap
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 
@@ -53,22 +54,36 @@ func (info *MailboxInfo) Parse(fields []interface{}) error {
 		return errors.New("Mailbox info needs at least 3 fields")
 	}
 
-	info.Attributes, _ = ParseStringList(fields[0])
+	var err error
+	if info.Attributes, err = ParseStringList(fields[0]); err != nil {
+		return err
+	}
 
-	info.Delimiter, _ = fields[1].(string)
+	var ok bool
+	if info.Delimiter, ok = fields[1].(string); !ok {
+		return errors.New("Mailbox delimiter must be a string")
+	}
 
-	name, _ := fields[2].(string)
-	info.Name, _ = utf7.Decoder.String(name)
-	info.Name = CanonicalMailboxName(info.Name)
+	if name, err := ParseString(fields[2]); err != nil {
+		return err
+	} else if name, err := utf7.Encoding.NewDecoder().String(name); err != nil {
+		return err
+	} else {
+		info.Name = CanonicalMailboxName(name)
+	}
 
 	return nil
 }
 
 // Format mailbox info to fields.
 func (info *MailboxInfo) Format() []interface{} {
-	name, _ := utf7.Encoder.String(info.Name)
+	name, _ := utf7.Encoding.NewEncoder().String(info.Name)
+	attrs := make([]interface{}, len(info.Attributes))
+	for i, attr := range info.Attributes {
+		attrs[i] = Atom(attr)
+	}
 	// Thunderbird doesn't understand delimiters if not quoted
-	return []interface{}{FormatStringList(info.Attributes), Quoted(info.Delimiter), name}
+	return []interface{}{attrs, Quoted(info.Delimiter), name}
 }
 
 // TODO: optimize this
@@ -125,19 +140,6 @@ func (info *MailboxInfo) Match(reference, pattern string) bool {
 	return info.match(name, pattern)
 }
 
-// Mailbox status items.
-const (
-	MailboxFlags          = "FLAGS"
-	MailboxPermanentFlags = "PERMANENTFLAGS"
-
-	// Defined in RFC 3501 section 6.3.10.
-	MailboxMessages    = "MESSAGES"
-	MailboxRecent      = "RECENT"
-	MailboxUnseen      = "UNSEEN"
-	MailboxUidNext     = "UIDNEXT"
-	MailboxUidValidity = "UIDVALIDITY"
-)
-
 // A mailbox status.
 type MailboxStatus struct {
 	// The mailbox name.
@@ -147,7 +149,7 @@ type MailboxStatus struct {
 	// The mailbox items that are currently filled in. This map's values
 	// should not be used directly, they must only be used by libraries
 	// implementing extensions of the IMAP protocol.
-	Items map[string]interface{}
+	Items map[StatusItem]interface{}
 
 	// The Items map may be accessed in different goroutines. Protect
 	// concurrent writes.
@@ -157,6 +159,8 @@ type MailboxStatus struct {
 	Flags []string
 	// The mailbox permanent flags.
 	PermanentFlags []string
+	// The sequence number of the first unseen message in the mailbox.
+	UnseenSeqNum uint32
 
 	// The number of messages in this mailbox.
 	Messages uint32
@@ -172,10 +176,10 @@ type MailboxStatus struct {
 }
 
 // Create a new mailbox status that will contain the specified items.
-func NewMailboxStatus(name string, items []string) *MailboxStatus {
+func NewMailboxStatus(name string, items []StatusItem) *MailboxStatus {
 	status := &MailboxStatus{
 		Name:  name,
-		Items: make(map[string]interface{}),
+		Items: make(map[StatusItem]interface{}),
 	}
 
 	for _, k := range items {
@@ -186,30 +190,30 @@ func NewMailboxStatus(name string, items []string) *MailboxStatus {
 }
 
 func (status *MailboxStatus) Parse(fields []interface{}) error {
-	status.Items = make(map[string]interface{})
+	status.Items = make(map[StatusItem]interface{})
 
-	var k string
+	var k StatusItem
 	for i, f := range fields {
 		if i%2 == 0 {
-			var ok bool
-			if k, ok = f.(string); !ok {
-				return errors.New("Key is not a string")
+			if kstr, ok := f.(string); !ok {
+				return fmt.Errorf("cannot parse mailbox status: key is not a string, but a %T", f)
+			} else {
+				k = StatusItem(strings.ToUpper(kstr))
 			}
-			k = strings.ToUpper(k)
 		} else {
 			status.Items[k] = nil
 
 			var err error
 			switch k {
-			case MailboxMessages:
+			case StatusMessages:
 				status.Messages, err = ParseNumber(f)
-			case MailboxRecent:
+			case StatusRecent:
 				status.Recent, err = ParseNumber(f)
-			case MailboxUnseen:
+			case StatusUnseen:
 				status.Unseen, err = ParseNumber(f)
-			case MailboxUidNext:
+			case StatusUidNext:
 				status.UidNext, err = ParseNumber(f)
-			case MailboxUidValidity:
+			case StatusUidValidity:
 				status.UidValidity, err = ParseNumber(f)
 			default:
 				status.Items[k] = f
@@ -228,19 +232,19 @@ func (status *MailboxStatus) Format() []interface{} {
 	var fields []interface{}
 	for k, v := range status.Items {
 		switch k {
-		case MailboxMessages:
+		case StatusMessages:
 			v = status.Messages
-		case MailboxRecent:
+		case StatusRecent:
 			v = status.Recent
-		case MailboxUnseen:
+		case StatusUnseen:
 			v = status.Unseen
-		case MailboxUidNext:
+		case StatusUidNext:
 			v = status.UidNext
-		case MailboxUidValidity:
+		case StatusUidValidity:
 			v = status.UidValidity
 		}
 
-		fields = append(fields, k, v)
+		fields = append(fields, string(k), v)
 	}
 	return fields
 }

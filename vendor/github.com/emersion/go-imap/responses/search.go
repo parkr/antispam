@@ -4,34 +4,38 @@ import (
 	"github.com/emersion/go-imap"
 )
 
+const searchName = "SEARCH"
+
 // A SEARCH response.
 // See RFC 3501 section 7.2.5
 type Search struct {
 	Ids []uint32
 }
 
-func (r *Search) HandleFrom(hdlr imap.RespHandler) (err error) {
-	for h := range hdlr {
-		fields, ok := h.AcceptNamedResp(imap.Search)
-		if !ok {
-			continue
-		}
+func (r *Search) Handle(resp imap.Resp) error {
+	name, fields, ok := imap.ParseNamedResp(resp)
+	if !ok || name != searchName {
+		return ErrUnhandled
+	}
 
-		for _, f := range fields {
-			id, _ := imap.ParseNumber(f)
-			r.Ids = append(r.Ids, id)
+	r.Ids = make([]uint32, len(fields))
+	for i, f := range fields {
+		if id, err := imap.ParseNumber(f); err != nil {
+			return err
+		} else {
+			r.Ids[i] = id
 		}
 	}
 
-	return
+	return nil
 }
 
 func (r *Search) WriteTo(w *imap.Writer) (err error) {
-	fields := []interface{}{imap.Search}
+	fields := []interface{}{searchName}
 	for _, id := range r.Ids {
 		fields = append(fields, id)
 	}
 
-	res := imap.NewUntaggedResp(fields)
-	return res.WriteTo(w)
+	resp := imap.NewUntaggedResp(fields)
+	return resp.WriteTo(w)
 }

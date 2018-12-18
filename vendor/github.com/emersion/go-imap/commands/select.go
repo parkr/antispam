@@ -15,12 +15,12 @@ type Select struct {
 }
 
 func (cmd *Select) Command() *imap.Command {
-	name := imap.Select
+	name := "SELECT"
 	if cmd.ReadOnly {
-		name = imap.Examine
+		name = "EXAMINE"
 	}
 
-	mailbox, _ := utf7.Encoder.String(cmd.Mailbox)
+	mailbox, _ := utf7.Encoding.NewEncoder().String(cmd.Mailbox)
 
 	return &imap.Command{
 		Name:      name,
@@ -33,9 +33,9 @@ func (cmd *Select) Parse(fields []interface{}) error {
 		return errors.New("No enough arguments")
 	}
 
-	if mailbox, ok := fields[0].(string); !ok {
-		return errors.New("Mailbox name must be a string")
-	} else if mailbox, err := utf7.Decoder.String(mailbox); err != nil {
+	if mailbox, err := imap.ParseString(fields[0]); err != nil {
+		return err
+	} else if mailbox, err := utf7.Encoding.NewDecoder().String(mailbox); err != nil {
 		return err
 	} else {
 		cmd.Mailbox = imap.CanonicalMailboxName(mailbox)

@@ -14,8 +14,12 @@ type flusher interface {
 	Flush() error
 }
 
-// A string that will be quoted.
-type Quoted string
+type (
+	// A string that will be quoted.
+	Quoted string
+	// A raw atom.
+	Atom string
+)
 
 type WriterTo interface {
 	WriteTo(w *Writer) error
@@ -83,8 +87,7 @@ func (w *Writer) writeAstring(s string) error {
 		return w.writeLiteral(bytes.NewBufferString(s))
 	}
 
-	specials := string([]rune{dquote, listStart, listEnd, literalStart, sp})
-	if strings.ToUpper(s) == nilAtom || s == "" || strings.ContainsAny(s, specials) {
+	if strings.ToUpper(s) == nilAtom || s == "" || strings.ContainsAny(s, atomSpecials) {
 		return w.writeQuoted(s)
 	}
 
@@ -162,6 +165,8 @@ func (w *Writer) writeField(field interface{}) error {
 		return w.writeAstring(field)
 	case Quoted:
 		return w.writeQuoted(string(field))
+	case Atom:
+		return w.writeAtom(string(field))
 	case int:
 		return w.writeNumber(uint32(field))
 	case uint32:
@@ -184,18 +189,18 @@ func (w *Writer) writeField(field interface{}) error {
 		return w.writeString(field.String())
 	case *BodySectionName:
 		// Can contain spaces - that's why we don't just pass it as a string
-		return w.writeString(field.String())
+		return w.writeString(string(field.FetchItem()))
 	}
 
 	return fmt.Errorf("imap: cannot format field: %v", field)
 }
 
-func (w *Writer) writeRespCode(code string, args []interface{}) error {
+func (w *Writer) writeRespCode(code StatusRespCode, args []interface{}) error {
 	if err := w.writeString(string(respCodeStart)); err != nil {
 		return err
 	}
 
-	fields := []interface{}{code}
+	fields := []interface{}{string(code)}
 	fields = append(fields, args...)
 
 	if err := w.writeFields(fields); err != nil {

@@ -27,11 +27,11 @@
 
 [[constraint]]
   name = "github.com/emersion/go-imap"
-  version = "0.9.0"
+  branch = "v1"
 
 [[constraint]]
   name = "github.com/rakyll/statik"
-  version = "0.1.5"
+  branch = "master"
 
 [prune]
   go-tests = true
