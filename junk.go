@@ -67,29 +67,31 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 	}()
 
 	log.Printf("Last %d messages:", numMessages)
-	i := from
-	for msg := range messages {
-		log.Println("*", msg.Envelope.Subject)
-		for _, sender := range msg.Envelope.From {
-			if !spammySender(conf, sender) {
-				bannedAddr := banSender(conf, sender)
-				log.Printf("Added %s to list of bad email domains", bannedAddr)
+	go func() {
+		i := from
+		for msg := range messages {
+			log.Println("*", msg.Envelope.Subject)
+			for _, sender := range msg.Envelope.From {
+				if !spammySender(conf, sender) {
+					bannedAddr := banSender(conf, sender)
+					log.Printf("Added %s to list of bad email domains", bannedAddr)
+				}
 			}
-		}
-		for _, sender := range msg.Envelope.Sender {
-			if !spammySender(conf, sender) {
-				bannedAddr := banSender(conf, sender)
-				log.Printf("Added %s to list of bad email domains", bannedAddr)
+			for _, sender := range msg.Envelope.Sender {
+				if !spammySender(conf, sender) {
+					bannedAddr := banSender(conf, sender)
+					log.Printf("Added %s to list of bad email domains", bannedAddr)
+				}
 			}
+			sort.Strings(conf.BadEmails)
+			sort.Strings(conf.BadEmailDomains)
+			go func(i uint32, msg *imap.Message) {
+				spam <- actionRequest{index: i, message: msg, action: "delete"}
+			}(i, msg)
+			i++
 		}
-		sort.Strings(conf.BadEmails)
-		sort.Strings(conf.BadEmailDomains)
-		go func(i uint32, msg *imap.Message) {
-			spam <- actionRequest{index: i, message: msg, action: "delete"}
-		}(i, msg)
-		i++
-	}
-	go func() { spam <- actionRequest{action: "close"} }()
+		close(spam)
+	}()
 
 	numDeleted := uint32(0)
 	for spammy := range spam {
@@ -99,8 +101,6 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 			deleteMessage(c, spammy.index-numDeleted)
 			log.Println("Deleted", spammy.message.Envelope.Subject)
 			numDeleted++
-		case "close":
-			close(spam)
 		default:
 			panic(errors.Errorf("Unknown action %q", spammy.action))
 		}
