@@ -84,13 +84,17 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 		}
 		sort.Strings(conf.BadEmails)
 		sort.Strings(conf.BadEmailDomains)
-		spam <- actionRequest{index: i, message: msg, action: "delete"}
+		go func(i uint32, msg *imap.Message) {
+			spam <- actionRequest{index: i, message: msg, action: "delete"}
+		}(i, msg)
 		i++
 	}
 	close(spam)
 
 	numDeleted := uint32(0)
-	for spammy := range spam {
+	for ; i > 0; i-- {
+		log.Printf("Fetching another spammy message...")
+		spammy := <-spam
 		log.Printf("* SPAM: %s (index=%d) (action=%s)", spammy.message.Envelope.Subject, spammy.index, spammy.action)
 		switch spammy.action {
 		case "delete":
