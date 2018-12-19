@@ -85,9 +85,7 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 			}
 			sort.Strings(conf.BadEmails)
 			sort.Strings(conf.BadEmailDomains)
-			go func(i uint32, msg *imap.Message) {
-				spam <- actionRequest{index: i, message: msg, action: "delete"}
-			}(i, msg)
+			spam <- actionRequest{index: i, message: msg, action: "delete"}
 			i++
 		}
 		close(spam)
