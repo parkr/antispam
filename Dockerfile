@@ -1,10 +1,13 @@
 # First, build
-FROM golang:1.10.0 as builder
+FROM golang as builder
 WORKDIR /go/src/github.com/parkr/antispam
-ADD . .
-RUN go version
+COPY vendor vendor
+COPY statik statik
+COPY *.go ./
+RUN ls
 RUN CGO_ENABLED=0 GOOS=linux go install github.com/parkr/antispam/...
 
+# Then, package
 FROM scratch
 COPY --from=builder /go/bin/antispam /bin/antispam
-CMD ["/bin/antispam"]
+ENTRYPOINT ["/bin/antispam"]
