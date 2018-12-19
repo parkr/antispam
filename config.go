@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 	"sort"
@@ -38,7 +39,7 @@ func readFilterFile(conf *config, filename string) error {
 	}
 	defer f.Close()
 
-	if err = json.NewDecoder(f).Decode(conf); err != nil {
+	if err = json.NewDecoder(f).Decode(conf); err != nil && err != io.EOF {
 		return err
 	}
 
