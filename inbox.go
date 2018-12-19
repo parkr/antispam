@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/emersion/go-imap"
+	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/pkg/errors"
 )
 
 func spammyMessage(conf *config, msg *imap.Message) bool {
@@ -46,7 +47,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 	// Select INBOX
 	mbox, err := c.Select("INBOX", false)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "error selecting INBOX"))
 	}
 	log.Println("Flags for INBOX:", mbox.Flags)
 
@@ -84,7 +85,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 	close(spam)
 
 	if err := <-done; err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "error fetching messages in inbox"))
 	}
 
 	numDeleted := uint32(0)
@@ -96,7 +97,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 			log.Println("Deleted", spammy.message.Envelope.Subject)
 			numDeleted++
 		default:
-			panic(fmt.Errorf("What does '%s' mean?", spammy.action))
+			panic(fmt.Errorf("unhandled spammy action %q", spammy.action))
 		}
 	}
 }

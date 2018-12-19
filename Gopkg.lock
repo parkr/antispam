@@ -25,6 +25,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9f6281d8f50290ba740db82fe5be52877936e47928cd67285ab31b490c202247"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "059132a15dd08d6704c67711dae0cf35ab991756"
+
+[[projects]]
+  branch = "master"
   digest = "1:ea0700160aca4ef099f4e06686a665a87691f4248dddd40796925eda2e46bd64"
   name = "github.com/rakyll/statik"
   packages = ["fs"]
@@ -51,6 +59,7 @@
   input-imports = [
     "github.com/emersion/go-imap",
     "github.com/emersion/go-imap/client",
+    "github.com/pkg/errors",
     "github.com/rakyll/statik/fs",
   ]
   solver-name = "gps-cdcl"

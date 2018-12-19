@@ -12,6 +12,7 @@ import (
 
 	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/pkg/errors"
 )
 
 var defaultFilterFile = "/tmp/antispam-filter.json"
@@ -35,12 +36,12 @@ func deleteMessage(c *client.Client, messageIndex uint32) {
 	operation := imap.FormatFlagsOp(imap.AddFlags, true)
 	flags := []interface{}{imap.DeletedFlag}
 	if err := c.Store(seqset, operation, flags, nil); err != nil {
-		panic(err)
+		panic(errors.Wrapf(err, "error marking message at index %d as deleted", messageIndex))
 	}
 
 	// Then delete it
 	if err := c.Expunge(nil); err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "error expunging deleted messages"))
 	}
 }
 
@@ -51,7 +52,7 @@ func printOutput(output io.Reader) {
 
 	outputBytes, err := ioutil.ReadAll(output)
 	if err != nil {
-		fmt.Printf("error reading output buffer: %+v\n", err)
+		fmt.Printf("error reading output buffer: %+v\n", errors.Wrap(err, "error reeading all output"))
 		return
 	}
 
@@ -89,11 +90,14 @@ func main() {
 		filterFile = &defaultFilterFile
 	}
 
+	conf := &config{}
 	log.Println("Reading config...")
-	conf := readConfig(*confFile)
+	if err := readConfigFile(conf, *confFile); err != nil {
+		panic(err)
+	}
 
 	log.Printf("Reading filter file %s", *filterFile)
-	if err := readFilterFile(conf, *filterFile); err != nil {
+	if err := readConfigFile(conf, *filterFile); err != nil {
 		panic(err)
 	}
 
@@ -105,7 +109,7 @@ func main() {
 	// Connect to server
 	c, err := client.DialTLS(conf.Address+":"+conf.Port, nil)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrapf(err, "unable to dial tls %q", conf.Address+":"+conf.Port))
 	}
 	log.Println("Connected")
 	c.ErrorLog = log.New(output, "imap/client: ", log.LstdFlags)
@@ -116,7 +120,7 @@ func main() {
 
 	// Login
 	if err := c.Login(conf.Username, conf.Password); err != nil {
-		panic(err)
+		panic(errors.Wrapf(err, "unable to login as %q", conf.Username))
 	}
 	log.Println("Logged in")
 
@@ -133,7 +137,7 @@ func main() {
 	}
 
 	if err := <-done; err != nil {
-		panic(err)
+		panic(errors.Wrap(err, "unable to list mailboxes"))
 	}
 	close(done)
 

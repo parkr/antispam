@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"sort"
 
 	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/pkg/errors"
 )
 
 // shouldBanEntireDomain determines whether the sender's HostName should be
@@ -39,7 +39,7 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 	// Select mailbox.
 	mbox, err := c.Select(mailboxName, false)
 	if err != nil {
-		panic(err)
+		panic(errors.Wrapf(err, "unable to select folder %q", mailboxName))
 	}
 	log.Printf("Flags for %s: %+v", mailboxName, mbox.Flags)
 
@@ -102,11 +102,11 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 		case "close":
 			close(spam)
 		default:
-			panic(fmt.Errorf("What does '%s' mean?", spammy.action))
+			panic(errors.Errorf("Unknown action %q", spammy.action))
 		}
 	}
 
 	if err := <-done; err != nil {
-		panic(err)
+		panic(errors.Wrapf(err, "unsuccessfully processed folder %q", mailboxName))
 	}
 }
