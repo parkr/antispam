@@ -22,8 +22,8 @@ func readGlobalBlacklists() {
 	}
 
 	domainsBaseChan := make(chan string, 10000)
-	domainsChan := make(chan string, 100)
-	emailsChan := make(chan string, 100)
+	domainsChan := make(chan string, 500)
+	emailsChan := make(chan string, 500)
 
 	go readBlacklistFile(statikFS, domainsBaseChan, "/dom-bl-base.txt")
 	go readBlacklistFile(statikFS, domainsChan, "/dom-bl.txt")
@@ -56,7 +56,11 @@ func readBlacklistFile(statikFS http.FileSystem, contentsChan chan string, filen
 				contentsChan <- pieces[0]
 			}
 		}
+		if err := scanner.Err(); err != nil {
+			log.Printf("%+v", errors.Wrapf(err, "error scanning %q", filename))
+		}
 	} else {
 		log.Printf("%+v", errors.Wrapf(err, "unable to open %q", filename))
 	}
+	close(contentsChan)
 }
