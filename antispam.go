@@ -10,7 +10,7 @@ import (
 	"os"
 	"sort"
 
-	"github.com/emersion/go-imap"
+	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
 

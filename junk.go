@@ -5,7 +5,7 @@ import (
 	"log"
 	"sort"
 
-	"github.com/emersion/go-imap"
+	imap "github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
 )
 
@@ -23,12 +23,16 @@ func shouldBanEntireDomain(sender *imap.Address) bool {
 }
 
 // banSender adds the sender to the custom block list.
-func banSender(conf *config, sender *imap.Address) {
+func banSender(conf *config, sender *imap.Address) string {
 	if shouldBanEntireDomain(sender) {
 		conf.BadEmailDomains = append(conf.BadEmailDomains, sender.HostName)
-	} else {
-		conf.BadEmails = append(conf.BadEmails, sender.MailboxName+"@"+sender.HostName)
+		return sender.HostName
 	}
+
+	// Otherwise, ban just the one email.
+	emailAddr := sender.MailboxName + "@" + sender.HostName
+	conf.BadEmails = append(conf.BadEmails, emailAddr)
+	return emailAddr
 }
 
 func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMessages uint32) {
@@ -68,14 +72,14 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 		log.Println("*", msg.Envelope.Subject)
 		for _, sender := range msg.Envelope.From {
 			if !spammySender(conf, sender) {
-				banSender(conf, sender)
-				log.Printf("Added %s to list of bad email domains", sender.HostName)
+				bannedAddr := banSender(conf, sender)
+				log.Printf("Added %s to list of bad email domains", bannedAddr)
 			}
 		}
 		for _, sender := range msg.Envelope.Sender {
 			if !spammySender(conf, sender) {
-				banSender(conf, sender)
-				log.Printf("Added %s to list of bad email domains", sender.HostName)
+				bannedAddr := banSender(conf, sender)
+				log.Printf("Added %s to list of bad email domains", bannedAddr)
 			}
 		}
 		sort.Strings(conf.BadEmails)
