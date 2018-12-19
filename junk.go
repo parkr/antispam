@@ -93,9 +93,9 @@ func processJunkFolder(c *client.Client, conf *config, mailboxName string, numMe
 
 	numDeleted := uint32(0)
 	for spammy := range spam {
-		log.Printf("* SPAM: %s (index=%d) (action=%s)", spammy.message.Envelope.Subject, spammy.index, spammy.action)
 		switch spammy.action {
 		case "delete":
+			log.Printf("* SPAM: %s (index=%d) (action=%s)", spammy.message.Envelope.Subject, spammy.index, spammy.action)
 			deleteMessage(c, spammy.index-numDeleted)
 			log.Println("Deleted", spammy.message.Envelope.Subject)
 			numDeleted++
