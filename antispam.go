@@ -46,7 +46,7 @@ func deleteMessage(c *client.Client, messageIndex uint32) {
 }
 
 func printOutput(output io.Reader) {
-	if output == nil {
+	if output == nil || output == os.Stderr {
 		return
 	}
 
@@ -64,7 +64,11 @@ func main() {
 
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Printf("An error occured! %+v\n", r)
+			if err, ok := r.(error); ok {
+				fmt.Printf("panic: %+v\n", errors.Wrap(err, "fatal error occurred"))
+			} else {
+				fmt.Printf("panic: %+v\n", r)
+			}
 			printOutput(output)
 		}
 	}()
