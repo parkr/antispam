@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "v1"
-  digest = "1:953241ce5262332fe6cf733e975d6e8604f484dfd83a4d464dbc1ce02ca1efbe"
+  digest = "1:2b99e755ad6f0fbc23137fa1e22a9f8d37d7105af8c18f3d9e4a3d784e7c933b"
   name = "github.com/emersion/go-imap"
   packages = [
     ".",
@@ -13,7 +13,7 @@
     "utf7",
   ]
   pruneopts = "UT"
-  revision = "5624370d373684a22740d08438dd4318ad41b9fe"
+  revision = "d9e4a1494c86dc0163ffb94fb217fbe03ddd3cc7"
 
 [[projects]]
   branch = "master"
