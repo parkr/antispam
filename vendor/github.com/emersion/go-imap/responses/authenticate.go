@@ -7,18 +7,17 @@ import (
 	"github.com/emersion/go-sasl"
 )
 
+type AuthReplyFunc func(reply []byte) error
+
 // An AUTHENTICATE response.
 type Authenticate struct {
 	Mechanism       sasl.Client
 	InitialResponse []byte
-	Writer          *imap.Writer
+	AuthReply       AuthReplyFunc
 }
 
 func (r *Authenticate) writeLine(l string) error {
-	if _, err := r.Writer.Write([]byte(l + "\r\n")); err != nil {
-		return err
-	}
-	return r.Writer.Flush()
+	return r.AuthReply([]byte(l + "\r\n"))
 }
 
 func (r *Authenticate) cancel() error {

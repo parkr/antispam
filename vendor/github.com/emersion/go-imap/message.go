@@ -47,7 +47,7 @@ const (
 	MIMESpecifier = "MIME"
 )
 
-// Returns the canonical form of a flag. Flags are case-insensitive.
+// CanonicalFlag returns the canonical form of a flag. Flags are case-insensitive.
 //
 // If the flag is defined in RFC 3501, it returns the flag with the case of the
 // RFC. Otherwise, it returns the lowercase version of the flag.
@@ -88,7 +88,7 @@ func ParseParamList(fields []interface{}) (map[string]string, error) {
 func FormatParamList(params map[string]string) []interface{} {
 	var fields []interface{}
 	for key, value := range params {
-		fields = append(fields, key, value)
+		fields = append(fields, key, Quoted(value))
 	}
 	return fields
 }
@@ -312,7 +312,7 @@ func (m *Message) Format() []interface{} {
 	return fields
 }
 
-// Get the body section with the specified name. Returns nil if it's not found.
+// GetBody gets the body section with the specified name. Returns nil if it's not found.
 func (m *Message) GetBody(section *BodySectionName) Literal {
 	section = section.resp()
 
@@ -454,7 +454,7 @@ func (section *BodySectionName) Equal(other *BodySectionName) bool {
 
 func (section *BodySectionName) resp() *BodySectionName {
 	resp := *section // Copy section
-	if resp.Peek != false {
+	if resp.Peek {
 		resp.Peek = false
 	}
 	if len(resp.Partial) == 2 {

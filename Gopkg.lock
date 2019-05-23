@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "v1"
-  digest = "1:cbc211266245566368b0765b2f058f2138f9c71aa2865bfbe92c608eeed38390"
+  digest = "1:dcb1acd86fc4d0368aadb849ffd300bf62923b69060630671fdbf0f4bfd11596"
   name = "github.com/emersion/go-imap"
   packages = [
     ".",
@@ -12,23 +12,23 @@
     "responses",
     "utf7",
   ]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "b7db4a2bc5cc04fb568fb036a438da43ee9a9f78"
 
 [[projects]]
   branch = "master"
-  digest = "1:7cc7f47cf4e6f9be30f0e38934f6470cf4c35c9479350bc5e764d3e428018e2e"
+  digest = "1:d46e8059110e04565216a6ccfa03890dc3efaa4837d5f191d9a87652577bc6c4"
   name = "github.com/emersion/go-sasl"
   packages = ["."]
-  pruneopts = "UT"
-  revision = "7e096a0a6197b89989e8cc31016daa67c8c62051"
+  pruneopts = "NUT"
+  revision = "47d4276003177822a0a7b78773d7a6ed51c6474d"
 
 [[projects]]
   branch = "master"
-  digest = "1:deff41c4160cc5b487a1d1a69a58925f2d3ac11befa0692b50e76940594e20f5"
+  digest = "1:f3bc4dcbd92f5aa52b7e1e598ef696bde6a671ae1732e52511d26f4fd22703eb"
   name = "github.com/pkg/errors"
   packages = ["."]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "27936f6d90f9c8e1145f11ed52ffffbfdb9e0af7"
 
 [[projects]]
@@ -36,11 +36,11 @@
   digest = "1:77b730fa4c2d98f3ddf492acbea351eb6b0560fa5eace4105a6fc33ff937bb1b"
   name = "github.com/rakyll/statik"
   packages = ["fs"]
-  pruneopts = "UT"
+  pruneopts = "NUT"
   revision = "3bac566d30cdbeddef402a80f3d6305860e59f12"
 
 [[projects]]
-  digest = "1:37672ad5821719e2df8509c2edd4ba5ae192463237c73c3a2d24ef8b2bc9e36f"
+  digest = "1:cc38c2209a6c1f94debdfd96934865a258eac2f905a8d3f8fd56e7d0cfb85edd"
   name = "golang.org/x/text"
   packages = [
     "encoding",
@@ -49,9 +49,9 @@
     "transform",
     "unicode/cldr",
   ]
-  pruneopts = "UT"
-  revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
-  version = "v0.3.0"
+  pruneopts = "NUT"
+  revision = "342b2e1fbaa52c93f31447ad2c6abc048c63e475"
+  version = "v0.3.2"
 
 [solve-meta]
   analyzer-name = "dep"

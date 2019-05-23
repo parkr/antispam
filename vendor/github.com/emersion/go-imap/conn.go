@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"net"
+	"sync"
 )
 
 // A connection state.
@@ -51,6 +52,59 @@ const (
 // COMPRESS).
 type ConnUpgrader func(conn net.Conn) (net.Conn, error)
 
+type Waiter struct {
+	start sync.WaitGroup
+	end sync.WaitGroup
+	finished bool
+}
+
+func NewWaiter() *Waiter {
+	w := &Waiter{finished: false}
+	w.start.Add(1)
+	w.end.Add(1)
+	return  w
+}
+
+func (w *Waiter) Wait() {
+	if !w.finished {
+		// Signal that we are ready for upgrade to continue.
+		w.start.Done()
+		// Wait for upgrade to finish.
+		w.end.Wait()
+		w.finished = true
+	}
+}
+
+func (w *Waiter) WaitReady() {
+	if !w.finished {
+		// Wait for reader/writer goroutine to be ready for upgrade.
+		w.start.Wait()
+	}
+}
+
+func (w *Waiter) Close() {
+	if !w.finished {
+		// Upgrade is finished, close chanel to release reader/writer
+		w.end.Done()
+	}
+}
+
+type LockedWriter struct {
+	lock sync.Mutex
+	writer io.Writer
+}
+
+// NewLockedWriter - goroutine safe writer.
+func NewLockedWriter(w io.Writer) io.Writer {
+	return &LockedWriter{writer: w}
+}
+
+func (w *LockedWriter) Write(b []byte) (int , error) {
+	w.lock.Lock()
+	defer w.lock.Unlock()
+	return w.writer.Write(b)
+}
+
 type debugWriter struct {
 	io.Writer
 
@@ -90,7 +144,7 @@ type Conn struct {
 	br *bufio.Reader
 	bw *bufio.Writer
 
-	waits chan struct{}
+	waiter *Waiter
 
 	// Print all commands and responses to this io.Writer.
 	debug io.Writer
@@ -104,6 +158,13 @@ func NewConn(conn net.Conn, r *Reader, w *Writer) *Conn {
 	return c
 }
 
+func (c *Conn) createWaiter() *Waiter {
+	// create new waiter each time.
+	w := NewWaiter()
+	c.waiter = w
+	return w
+}
+
 func (c *Conn) init() {
 	r := io.Reader(c.Conn)
 	w := io.Writer(c.Conn)
@@ -112,6 +173,11 @@ func (c *Conn) init() {
 		localDebug, remoteDebug := c.debug, c.debug
 		if debug, ok := c.debug.(*debugWriter); ok {
 			localDebug, remoteDebug = debug.local, debug.remote
+		}
+		// If local and remote are the same, then we need a LockedWriter.
+		if localDebug == remoteDebug {
+			localDebug = NewLockedWriter(localDebug)
+			remoteDebug = localDebug
 		}
 
 		if localDebug != nil {
@@ -160,14 +226,9 @@ func (c *Conn) Flush() error {
 // Upgrade a connection, e.g. wrap an unencrypted connection with an encrypted
 // tunnel.
 func (c *Conn) Upgrade(upgrader ConnUpgrader) error {
-	// Flush all buffered data
-	if err := c.Flush(); err != nil {
-		return err
-	}
-
 	// Block reads and writes during the upgrading process
-	c.waits = make(chan struct{})
-	defer close(c.waits)
+	w := c.createWaiter()
+	defer w.Close()
 
 	upgraded, err := upgrader(c.Conn)
 	if err != nil {
@@ -179,11 +240,15 @@ func (c *Conn) Upgrade(upgrader ConnUpgrader) error {
 	return nil
 }
 
-// Wait waits for the connection to be ready for reads and writes.
+// Called by reader/writer goroutines to wait for Upgrade to finish
 func (c *Conn) Wait() {
-	if c.waits != nil {
-		<-c.waits
-	}
+	c.waiter.Wait()
+}
+
+// Called by Upgrader to wait for reader/writer goroutines to be ready for
+// upgrade.
+func (c *Conn) WaitReady() {
+	c.waiter.WaitReady()
 }
 
 // SetDebug defines an io.Writer to which all network activity will be logged.

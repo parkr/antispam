@@ -88,8 +88,7 @@ func (c *Client) executeSearch(uid bool, criteria *imap.SearchCriteria, charset 
 		return
 	}
 
-	var cmd imap.Commander
-	cmd = &commands.Search{
+	var cmd imap.Commander = &commands.Search{
 		Charset:  charset,
 		Criteria: criteria,
 	}
@@ -135,14 +134,13 @@ func (c *Client) UidSearch(criteria *imap.SearchCriteria) (uids []uint32, err er
 }
 
 func (c *Client) fetch(uid bool, seqset *imap.SeqSet, items []imap.FetchItem, ch chan *imap.Message) error {
+	defer close(ch)
+
 	if c.State() != imap.SelectedState {
 		return ErrNoMailboxSelected
 	}
 
-	defer close(ch)
-
-	var cmd imap.Commander
-	cmd = &commands.Fetch{
+	var cmd imap.Commander = &commands.Fetch{
 		SeqSet: seqset,
 		Items:  items,
 	}
@@ -194,8 +192,7 @@ func (c *Client) store(uid bool, seqset *imap.SeqSet, item imap.StoreItem, value
 		}
 	}
 
-	var cmd imap.Commander
-	cmd = &commands.Store{
+	var cmd imap.Commander = &commands.Store{
 		SeqSet: seqset,
 		Item:   item,
 		Value:  value,
