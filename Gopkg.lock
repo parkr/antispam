@@ -33,11 +33,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:77b730fa4c2d98f3ddf492acbea351eb6b0560fa5eace4105a6fc33ff937bb1b"
+  digest = "1:73bdddd4535b361988cc3ef9232b2373a9f44514f5db3bb49504924a36f19183"
   name = "github.com/rakyll/statik"
   packages = ["fs"]
   pruneopts = "NUT"
-  revision = "3bac566d30cdbeddef402a80f3d6305860e59f12"
+  revision = "925a23bda946b50bb0804894f340c5da2b95603b"
 
 [[projects]]
   digest = "1:cc38c2209a6c1f94debdfd96934865a258eac2f905a8d3f8fd56e7d0cfb85edd"
