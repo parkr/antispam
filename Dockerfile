@@ -1,8 +1,8 @@
 # First, build
 FROM golang as builder
 WORKDIR /go/src/github.com/parkr/antispam
-COPY vendor vendor
 COPY statik statik
+COPY go* ./
 COPY *.go ./
 RUN ls
 RUN CGO_ENABLED=0 GOOS=linux go install github.com/parkr/antispam/...
