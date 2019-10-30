@@ -6,6 +6,7 @@ COPY statik statik
 COPY *.go ./
 RUN ls
 RUN CGO_ENABLED=0 GOOS=linux go install github.com/parkr/antispam/...
+RUN CGO_ENABLED=0 GOOS=linux go test github.com/parkr/antispam/...
 
 # Then, package
 FROM scratch
