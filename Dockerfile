@@ -1,14 +1,15 @@
 # First, build
 FROM golang as builder
-WORKDIR /go/src/github.com/parkr/antispam
+WORKDIR /app/antispam
 COPY statik statik
 COPY go* ./
 COPY *.go ./
-RUN ls
-RUN go install github.com/parkr/antispam/...
-RUN go test github.com/parkr/antispam/...
+RUN ls -l \
+  && go install ./... \
+  && go test ./... \
+  && ls -lh
 
 # Then, package
-FROM scratch
+FROM debian:buster-slim
 COPY --from=builder /go/bin/antispam /bin/antispam
 ENTRYPOINT ["/bin/antispam"]
