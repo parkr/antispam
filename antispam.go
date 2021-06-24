@@ -105,8 +105,8 @@ func main() {
 		panic(err)
 	}
 
-	log.Println("Loading global blacklists...")
-	readGlobalBlacklists()
+	log.Println("Loading global blocklists...")
+	readGlobalBlocklists()
 
 	log.Println("Connecting to server...")
 

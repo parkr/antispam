@@ -12,10 +12,10 @@ import (
 	"github.com/rakyll/statik/fs"
 )
 
-var globalDomainBlacklist []string
-var globalEmailBlacklist []string
+var globalDomainBlocklist []string
+var globalEmailBlocklist []string
 
-func readGlobalBlacklists() {
+func readGlobalBlocklists() {
 	statikFS, err := fs.New()
 	if err != nil {
 		panic(errors.Wrap(err, "unable to register statik fs"))
@@ -25,28 +25,28 @@ func readGlobalBlacklists() {
 	domainsChan := make(chan string, 500)
 	emailsChan := make(chan string, 500)
 
-	go readBlacklistFile(statikFS, domainsBaseChan, "/dom-bl-base.txt")
-	go readBlacklistFile(statikFS, domainsChan, "/dom-bl.txt")
-	go readBlacklistFile(statikFS, emailsChan, "/from-bl.txt")
+	go readBlocklistFile(statikFS, domainsBaseChan, "/dom-bl-base.txt")
+	go readBlocklistFile(statikFS, domainsChan, "/dom-bl.txt")
+	go readBlocklistFile(statikFS, emailsChan, "/from-bl.txt")
 
 	for domain := range domainsBaseChan {
-		globalDomainBlacklist = append(globalDomainBlacklist, domain)
+		globalDomainBlocklist = append(globalDomainBlocklist, domain)
 	}
 
 	for domain := range domainsChan {
-		globalDomainBlacklist = append(globalDomainBlacklist, domain)
+		globalDomainBlocklist = append(globalDomainBlocklist, domain)
 	}
 
 	for email := range emailsChan {
-		globalEmailBlacklist = append(globalEmailBlacklist, email)
+		globalEmailBlocklist = append(globalEmailBlocklist, email)
 	}
 
-	sort.Strings(globalDomainBlacklist)
-	sort.Strings(globalEmailBlacklist)
+	sort.Strings(globalDomainBlocklist)
+	sort.Strings(globalEmailBlocklist)
 }
 
-func readBlacklistFile(statikFS http.FileSystem, contentsChan chan string, filename string) {
-	// Read the base domain blacklist. This changes infrequently.
+func readBlocklistFile(statikFS http.FileSystem, contentsChan chan string, filename string) {
+	// Read the base domain blocklist. This changes infrequently.
 	f, err := statikFS.Open(filename)
 	if err == nil {
 		scanner := bufio.NewScanner(f)

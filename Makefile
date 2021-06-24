@@ -10,7 +10,7 @@ statik:
 	go get github.com/rakyll/statik
 
 bundle: statik
-	statik -src=$(shell pwd)/blacklists
+	statik -src=$(shell pwd)/blocklists
 
 build: bundle
 	go install ./...
