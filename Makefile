@@ -3,7 +3,7 @@ REV:=$(shell git rev-parse HEAD)
 all: build test
 
 golint:
-	go get github.com/golang/lint/golint
+	go get golang.org/x/lint/golint
 
 .PHONY: statik
 statik:
@@ -13,16 +13,16 @@ bundle: statik
 	statik -src=$(shell pwd)/blacklists
 
 build: bundle
-	go install github.com/parkr/antispam
+	go install ./...
 
 test: bundle vet lint
-	go test github.com/parkr/antispam
+	go test ./...
 
 vet:
-	go vet github.com/parkr/antispam
+	go vet ./...
 
 lint: golint
-	golint github.com/parkr/antispam
+	golint ./...
 
 docker-build:
 	docker build -t parkr/antispam:$(REV) .
