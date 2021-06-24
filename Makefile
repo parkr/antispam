@@ -24,8 +24,14 @@ vet:
 lint: golint
 	golint ./...
 
+dive: docker-build
+	dive parkr/antispam:$(REV)
+
 docker-build:
 	docker build -t parkr/antispam:$(REV) .
+
+docker-test: docker-build
+	docker run parkr/antispam:$(REV) -h
 
 docker-release: docker-build
 	docker push parkr/antispam:$(REV)
