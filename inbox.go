@@ -31,12 +31,12 @@ func spammySender(conf *config, sender *imap.Address) bool {
 
 	if isInStringSlice(conf.BadEmailDomains, sender.HostName) ||
 		isInStringSlice(conf.BadEmailDomains, sender.AtDomainList) ||
-		isInStringSlice(globalDomainBlacklist, sender.HostName) ||
-		isInStringSlice(globalDomainBlacklist, sender.AtDomainList) ||
+		isInStringSlice(globalDomainBlocklist, sender.HostName) ||
+		isInStringSlice(globalDomainBlocklist, sender.AtDomainList) ||
 		isInStringSlice(conf.BadEmails, senderEmail) ||
 		isInStringSlice(conf.BadEmails, senderEmailAtDomain) ||
-		isInStringSlice(globalEmailBlacklist, senderEmail) ||
-		isInStringSlice(globalEmailBlacklist, senderEmailAtDomain) {
+		isInStringSlice(globalEmailBlocklist, senderEmail) ||
+		isInStringSlice(globalEmailBlocklist, senderEmailAtDomain) {
 		return true
 	}
 

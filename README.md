@@ -6,7 +6,7 @@ Do you get spam? If you don't use a spam filter (or your service provider doesn'
 
 `antispam` is a little binary that reads in messages from your inbox and deletes the ones that are spam. Nice, eh?
 
-How does it do this? Pretty simple: domain & email blacklists. Three massive blacklists are included in the binary to identify spam From addresses.
+How does it do this? Pretty simple: domain & email blocklists. Three massive blocklists are included in the binary to identify spam From addresses.
 
 If you notice someone not on this list, you can add it to your configuration. See below.
 
