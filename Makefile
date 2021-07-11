@@ -12,8 +12,9 @@ statik:
 bundle: statik
 	statik -f -src=$(shell pwd)/blocklists
 
-build: bundle
+build: bundle *.go
 	go install ./...
+	go build ./...
 
 test: bundle vet lint
 	go test ./...
@@ -30,7 +31,7 @@ clean:
 dive: docker-build
 	dive parkr/antispam:$(REV)
 
-docker-build:
+docker-build: Dockerfile *.go
 	docker build -t parkr/antispam:$(REV) .
 
 docker-test: docker-build
