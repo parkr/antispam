@@ -15,6 +15,7 @@ bundle: statik
 build: bundle *.go
 	go install ./...
 	go build ./...
+	go build .
 
 test: bundle vet lint
 	go test ./...
@@ -27,6 +28,7 @@ lint: golint
 
 clean:
 	rm -f statik/statik.go
+	rm -f antispam
 
 dive: docker-build
 	dive parkr/antispam:$(REV)
