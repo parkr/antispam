@@ -1,5 +1,6 @@
 REV:=$(shell git rev-parse HEAD)
 CONTAINER_TAG=parkr/antispam:$(REV)
+LATEST_TAG=parkr/antispam:latest
 
 all: build test
 
@@ -42,3 +43,5 @@ docker-test: docker-build
 
 docker-release: docker-build
 	docker push $(CONTAINER_TAG)
+	docker tag $(CONTAINER_TAG) $(LATEST_TAG)
+	docker push $(LATEST_TAG)
