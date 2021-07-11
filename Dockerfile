@@ -11,5 +11,12 @@ RUN ls -l \
 
 # Then, package
 FROM debian:buster-slim
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates
+
+RUN update-ca-certificates
+WORKDIR /app/
+ADD config.json /app/
+RUN touch /tmp/antispam-filter.json
 COPY --from=builder /go/bin/antispam /bin/antispam
 ENTRYPOINT ["/bin/antispam"]

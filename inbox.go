@@ -22,6 +22,10 @@ func spammyMessage(conf *config, msg *imap.Message) bool {
 		}
 		log.Println("  ", senderHeader.MailboxName+"@"+senderHeader.HostName, "not spammy")
 	}
+
+	if conf.UseFlags && spammyFlags(conf, msg.Flags) {
+		return true
+	}
 	return false
 }
 
@@ -43,6 +47,27 @@ func spammySender(conf *config, sender *imap.Address) bool {
 	return false
 }
 
+func spammyFlags(conf *config, flags []string) bool {
+	flagged := false
+	seen := false
+
+	for _, flag := range flags {
+		switch flag {
+		case imap.FlaggedFlag:
+			flagged = true
+		case imap.SeenFlag:
+			seen = true
+		}
+	}
+
+	// it's considered spam if flagged but not read
+	if flagged && !seen {
+		return true
+	}
+
+	return false
+}
+
 func processInbox(c *client.Client, conf *config, numMessages uint32) {
 	// Select INBOX
 	mbox, err := c.Select("INBOX", false)
@@ -56,7 +81,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 		return
 	}
 
-	// Get the last 10 messages
+	// Get the last numMessages
 	from := uint32(1)
 	to := mbox.Messages
 	if mbox.Messages > numMessages {
@@ -70,7 +95,7 @@ func processInbox(c *client.Client, conf *config, numMessages uint32) {
 	spam := make(chan actionRequest, numMessages)
 	done := make(chan error, 1)
 	go func() {
-		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope}, messages)
+		done <- c.Fetch(seqset, []imap.FetchItem{imap.FetchEnvelope, imap.FetchFlags}, messages)
 	}()
 
 	log.Printf("Last %d messages:", numMessages)
