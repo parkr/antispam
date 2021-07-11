@@ -10,6 +10,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const DefaultConfig = "config.json"
+
 type config struct {
 	Address, Port              string   `json:",omitempty"`
 	Username, Password         string   `json:",omitempty"`

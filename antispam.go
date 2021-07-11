@@ -89,7 +89,14 @@ func main() {
 	flag.Parse()
 
 	if *confFile == "" {
-		panic("Specify the -config flag")
+		// If DefaultConfig works, use it, else panic
+		f, err := os.Open(DefaultConfig)
+		if err != nil {
+			panic("Specify the -config flag")
+		}
+		f.Close()
+
+		*confFile = DefaultConfig
 	}
 
 	if *debugFlag {
