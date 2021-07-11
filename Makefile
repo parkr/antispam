@@ -1,4 +1,5 @@
 REV:=$(shell git rev-parse HEAD)
+CONTAINER_TAG=parkr/antispam:$(REV)
 
 all: build test
 
@@ -31,13 +32,13 @@ clean:
 	rm -f antispam
 
 dive: docker-build
-	dive parkr/antispam:$(REV)
+	dive $(CONTAINER_TAG)
 
 docker-build: Dockerfile *.go
-	docker build -t parkr/antispam:$(REV) .
+	docker build -t $(CONTAINER_TAG) .
 
 docker-test: docker-build
-	docker run parkr/antispam:$(REV) -h
+	docker run $(CONTAINER_TAG) -h
 
 docker-release: docker-build
-	docker push parkr/antispam:$(REV)
+	docker push $(CONTAINER_TAG)
