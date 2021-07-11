@@ -26,6 +26,8 @@ Configuration is via a JSON file. It has 6 possible fields, but only 4 are requi
   "Port": "993",
   "Username": "email@example.com",
   "Password": "myplaintextpassword"
+  "UseJunk": true,
+  "UseSpam": true
 }
 ```
 
@@ -48,5 +50,5 @@ Two optional configuration options are `BadEmailDomains` and `BadEmails`.
 ## Usage
 
 ```console
-$ antispam -config=path/to/config.json -num=50
+$ make && ./antispam -config path/to/config.json -filter path/to/filter.json --num=50
 ```
