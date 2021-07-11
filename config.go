@@ -16,6 +16,8 @@ type config struct {
 	BadEmailDomains, BadEmails []string `json:",omitempty"`
 	UseJunk                    bool     `json:",omitempty"`
 	UseSpam                    bool     `json:",omitempty"`
+	UseFlags                   bool     `json:",omitempty"`
+	UseBlockLists              bool     `json:",omitempty"`
 }
 
 func readConfigFile(conf *config, filename string) error {

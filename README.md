@@ -18,7 +18,7 @@ $ go get -u github.com/parkr/antispam
 
 ## Configuring
 
-Configuration is via a JSON file. It has 6 possible fields, but only 4 are required:
+Configuration is via a JSON file. It has 10 possible fields, but only the first 4 are required:
 
 ```json
 {
@@ -27,13 +27,23 @@ Configuration is via a JSON file. It has 6 possible fields, but only 4 are requi
   "Username": "email@example.com",
   "Password": "myplaintextpassword"
   "UseJunk": true,
-  "UseSpam": true
+  "UseSpam": true,
+  "UseFlags": false,
+  "UseBlockLists": true,
 }
 ```
 
 That will log into `mail.example.com:993` as `email@example.com` with password `myplaintextpassword`. Easy!
 
-Two optional configuration options are `BadEmailDomains` and `BadEmails`.
+UseJunk and UseSpam will cause antispam to scan folders Junk and Spam,
+respectively.
+
+UseFlags will cause any message flagged but unread to be treated as spam. The
+flag will be cleared before the message is deleted.
+
+UseBlockLists uses the union of the included statik blocklist files plus
+BadEmailDomains and BadEmail, if present.
+
 
 ```json
 {
