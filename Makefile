@@ -24,6 +24,9 @@ vet:
 lint: golint
 	golint ./...
 
+clean:
+	rm -f statik/statik.go
+
 dive: docker-build
 	dive parkr/antispam:$(REV)
 
