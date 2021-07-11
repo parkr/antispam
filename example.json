@@ -1,0 +1,8 @@
+{
+  "Address": "imap.example.com",
+  "Port": "993",
+  "Username": "user@example.com",
+  "Password": "example-password",
+  "BadEmailDomains": ["horriblehepsebah.com", "iwillspamyou.biz"],
+  "BadEmails": ["somenastyspammer@gmail.com", "someonewhoseaccountwascompromised@verizon.net"]
+}
