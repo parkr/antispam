@@ -13,7 +13,7 @@ If you notice someone not on this list, you can add it to your configuration. Se
 ## Installation
 
 ```console
-$ go get -u github.com/parkr/antispam
+$ go install github.com/parkr/antispam@latest
 ```
 
 ## Configuring
