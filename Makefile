@@ -10,7 +10,7 @@ statik:
 	go get github.com/rakyll/statik
 
 bundle: statik
-	statik -src=$(shell pwd)/blocklists
+	statik -f -src=$(shell pwd)/blocklists
 
 build: bundle
 	go install ./...
@@ -23,6 +23,9 @@ vet:
 
 lint: golint
 	golint ./...
+
+clean:
+	rm -f statik/statik.go
 
 dive: docker-build
 	dive parkr/antispam:$(REV)

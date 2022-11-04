@@ -94,16 +94,18 @@ func main() {
 		filterFile = &defaultFilterFile
 	}
 
-	conf := &config{}
+	conf := &config{UseSpam: true, UseJunk: true}
 	log.Println("Reading config...")
 	if err := readConfigFile(conf, *confFile); err != nil {
 		panic(err)
 	}
+	log.Println("Read config", conf)
 
 	log.Printf("Reading filter file %s", *filterFile)
 	if err := readConfigFile(conf, *filterFile); err != nil {
 		panic(err)
 	}
+	log.Println("Read filter", conf)
 
 	log.Println("Loading global blocklists...")
 	readGlobalBlocklists()
@@ -146,9 +148,14 @@ func main() {
 	close(done)
 
 	numMessages := uint32(*numMessagesFromFlag)
-	processJunkFolder(c, conf, "Junk", numMessages) // Things we manually label as Junk will be added to our config.
-	processJunkFolder(c, conf, "Spam", numMessages) // Things we manually label as Junk will be added to our config.
-	processInbox(c, conf, numMessages)              // Remove spam from the inbox.
+
+	if conf.UseJunk {
+		processJunkFolder(c, conf, "Junk", numMessages) // Things we manually label as Junk will be added to our config.
+	}
+	if conf.UseSpam {
+		processJunkFolder(c, conf, "Spam", numMessages) // Things we manually label as Junk will be added to our config.
+	}
+	processInbox(c, conf, numMessages) // Remove spam from the inbox.
 
 	writeNewFilterFile(*filterFile, conf)
 
