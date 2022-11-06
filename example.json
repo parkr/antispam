@@ -6,5 +6,7 @@
   "BadEmailDomains": ["horriblehepsebah.com", "iwillspamyou.biz"],
   "BadEmails": ["somenastyspammer@gmail.com", "someonewhoseaccountwascompromised@verizon.net"],
   "UseJunk": true,
-  "UseSpam": true
+  "UseSpam": true,
+  "UseFlags": false,
+  "UseBlockLists": true
 }

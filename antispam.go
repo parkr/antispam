@@ -35,8 +35,17 @@ func deleteMessage(c *client.Client, messageIndex uint32) {
 	// First mark the message as deleted
 	operation := imap.FormatFlagsOp(imap.AddFlags, true)
 	flags := []interface{}{imap.DeletedFlag}
+
 	if err := c.Store(seqset, operation, flags, nil); err != nil {
 		panic(errors.Wrapf(err, "error marking message at index %d as deleted", messageIndex))
+	}
+
+	// Then clear FlaggedFlag
+	operation = imap.FormatFlagsOp(imap.RemoveFlags, true)
+	flags = []interface{}{imap.FlaggedFlag}
+
+	if err := c.Store(seqset, operation, flags, nil); err != nil {
+		panic(errors.Wrapf(err, "error clearing flagged flag at index %d", messageIndex))
 	}
 
 	// Then delete it
@@ -80,7 +89,14 @@ func main() {
 	flag.Parse()
 
 	if *confFile == "" {
-		panic("Specify the -config flag")
+		// If DefaultConfig works, use it, else panic
+		f, err := os.Open(DefaultConfig)
+		if err != nil {
+			panic("Specify the -config flag")
+		}
+		f.Close()
+
+		*confFile = DefaultConfig
 	}
 
 	if *debugFlag {
@@ -94,7 +110,7 @@ func main() {
 		filterFile = &defaultFilterFile
 	}
 
-	conf := &config{UseSpam: true, UseJunk: true}
+	conf := &config{UseSpam: true, UseJunk: true, UseBlockLists: true}
 	log.Println("Reading config...")
 	if err := readConfigFile(conf, *confFile); err != nil {
 		panic(err)
@@ -107,8 +123,12 @@ func main() {
 	}
 	log.Println("Read filter", conf)
 
-	log.Println("Loading global blocklists...")
-	readGlobalBlocklists()
+	if conf.UseBlockLists {
+		log.Println("Loading global blocklists...")
+		readGlobalBlocklists()
+	} else {
+		log.Println("Skipping global blocklists...")
+	}
 
 	log.Println("Connecting to server...")
 
@@ -157,7 +177,9 @@ func main() {
 	}
 	processInbox(c, conf, numMessages) // Remove spam from the inbox.
 
-	writeNewFilterFile(*filterFile, conf)
+	if conf.UseBlockLists {
+		writeNewFilterFile(*filterFile, conf)
+	}
 
 	log.Println("Done!")
 }

@@ -10,12 +10,16 @@ import (
 	"github.com/pkg/errors"
 )
 
+const DefaultConfig = "config.json"
+
 type config struct {
 	Address, Port              string   `json:",omitempty"`
 	Username, Password         string   `json:",omitempty"`
 	BadEmailDomains, BadEmails []string `json:",omitempty"`
 	UseJunk                    bool     `json:",omitempty"`
 	UseSpam                    bool     `json:",omitempty"`
+	UseFlags                   bool     `json:",omitempty"`
+	UseBlockLists              bool     `json:",omitempty"`
 }
 
 func readConfigFile(conf *config, filename string) error {

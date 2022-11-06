@@ -1,4 +1,6 @@
 REV:=$(shell git rev-parse HEAD)
+CONTAINER_TAG=parkr/antispam:$(REV)
+LATEST_TAG=parkr/antispam:latest
 
 all: build test
 
@@ -12,8 +14,10 @@ statik:
 bundle: statik
 	statik -f -src=$(shell pwd)/blocklists
 
-build: bundle
+build: bundle *.go
 	go install ./...
+	go build ./...
+	go build .
 
 test: bundle vet lint
 	go test ./...
@@ -26,15 +30,18 @@ lint: golint
 
 clean:
 	rm -f statik/statik.go
+	rm -f antispam
 
 dive: docker-build
-	dive parkr/antispam:$(REV)
+	dive $(CONTAINER_TAG)
 
-docker-build:
-	docker build -t parkr/antispam:$(REV) .
+docker-build: Dockerfile *.go
+	docker build -t $(CONTAINER_TAG) .
 
 docker-test: docker-build
-	docker run parkr/antispam:$(REV) -h
+	docker run $(CONTAINER_TAG) -h
 
 docker-release: docker-build
-	docker push parkr/antispam:$(REV)
+	docker push $(CONTAINER_TAG)
+	docker tag $(CONTAINER_TAG) $(LATEST_TAG)
+	docker push $(LATEST_TAG)
