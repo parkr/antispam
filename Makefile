@@ -7,11 +7,11 @@ all: build test
 golint:
 	go get golang.org/x/lint/golint
 
-.PHONY: statik
-statik:
-	go get github.com/rakyll/statik
+.PHONY: statik-cmd
+statik-cmd:
+	go install github.com/rakyll/statik
 
-bundle: statik
+bundle: statik-cmd
 	statik -f -src=$(shell pwd)/blocklists
 
 build: bundle *.go

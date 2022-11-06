@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// DefaultConfig is the path for the default config file.
 const DefaultConfig = "config.json"
 
 type config struct {
