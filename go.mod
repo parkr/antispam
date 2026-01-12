@@ -5,7 +5,7 @@ go 1.24
 require (
 	github.com/emersion/go-imap v1.2.1
 	github.com/pkg/errors v0.9.1
-	github.com/rakyll/statik v0.1.7
+	github.com/rakyll/statik v0.1.8
 )
 
 require (
